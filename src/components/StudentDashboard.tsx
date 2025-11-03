@@ -1,17 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import React, { useState, useEffect } from "react";
 
 const slideshowImages = [
   {
-    url: "https://images.unsplash.com/photo-1565688527174-775059ac429c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbCUyMGNhcmVlciUyMGRldmVsb3BtZW50fGVufDF8fHx8MTc1ODI3ODQ2OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Unlock Your Career Potential",
-    subtitle: "Explore Opportunities"
+    description:
+      "Access a curated list of student-friendly jobs and internships.",
+    image: "/src/assets/careerpotential.jpg",
   },
   {
-    url: "https://images.unsplash.com/photo-1727790632675-204d26c2326c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwc3R1ZHlpbmclMjBlZHVjYXRpb258ZW58MXx8fHwxNzU4Mjc4NDcyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    title: "Study Smart, Live Better",
-    subtitle: "Find Your Perfect Accommodation"
-  }
+    title: "Find Your Dream Job Easily",
+    description:
+      "Get daily tips to improve your productivity, learning, networking, and more.",
+    image: "/src/assets/dreamjob.jpg",
+  },
+  {
+    title: "Get a Hostel Without a Sweat",
+    description:
+      "Unicore provides easy access to hostels near your school, and you don’t even have to step out!",
+    image: "/src/assets/findhostel.jpg",
+  },
+  {
+    title: "Allow Unibot Help With Your CV",
+    description:
+      "Unibot helps you to tailor your resume to each job application to make a strong first impression.",
+    image: "/src/assets/unibotCV.jpg",
+  },
 ];
 
 export function StudentDashboard() {
@@ -19,9 +32,8 @@ export function StudentDashboard() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slideshowImages.length);
-    }, 2000);
-
+      setCurrentSlide((prev: number) => (prev + 1) % slideshowImages.length);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -30,26 +42,29 @@ export function StudentDashboard() {
       {/* Hero Section with Slideshow */}
       <div className="relative h-64 bg-gradient-to-r from-purple-600 to-blue-600 overflow-hidden">
         <div className="absolute inset-0">
-          <ImageWithFallback
-            src={slideshowImages[currentSlide].url}
+          <img
+            src={slideshowImages[currentSlide].image}
             alt={slideshowImages[currentSlide].title}
             className="w-full h-full object-cover opacity-30"
           />
         </div>
         <div className="relative z-10 flex items-center justify-center h-full text-white text-center">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{slideshowImages[currentSlide].title}</h1>
-            <p className="text-lg opacity-90">{slideshowImages[currentSlide].subtitle}</p>
+            <h1 className="text-3xl font-bold mb-2">
+              {slideshowImages[currentSlide].title}
+            </h1>
+            <p className="text-lg opacity-90">
+              {slideshowImages[currentSlide].description}
+            </p>
           </div>
         </div>
-        
         {/* Slide indicators */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
           {slideshowImages.map((_, index) => (
             <div
               key={index}
               className={`w-2 h-2 rounded-full ${
-                index === currentSlide ? 'bg-white' : 'bg-white/50'
+                index === currentSlide ? "bg-white" : "bg-white/50"
               }`}
             />
           ))}
@@ -64,7 +79,10 @@ export function StudentDashboard() {
           <div className="space-y-3">
             <div className="text-sm text-gray-600">
               <span className="font-medium text-blue-600">Networking</span>
-              <p className="mt-1">Connect with alumni, professors, and peers to expand your professional network. Every conversation is an opportunity.</p>
+              <p className="mt-1">
+                Connect with alumni, professors, and peers to expand your
+                professional network. Every conversation is an opportunity.
+              </p>
             </div>
           </div>
         </div>
@@ -73,7 +91,10 @@ export function StudentDashboard() {
         <div className="bg-white rounded-lg p-6 shadow-sm">
           <h3 className="font-semibold mb-3">Daily Educational Quote</h3>
           <div className="text-sm text-gray-600">
-            <p className="italic">"The best time to plant a tree was 20 years ago. The second best time is now."</p>
+            <p className="italic">
+              "The best time to plant a tree was 20 years ago. The second best
+              time is now."
+            </p>
             <p className="mt-2 text-gray-500">- Chinese Proverb</p>
           </div>
         </div>
@@ -90,7 +111,9 @@ export function StudentDashboard() {
               </div>
             </div>
             <blockquote className="text-lg text-gray-700 mb-4">
-              "I had no hope of getting an internship this summer. But because of this site, I got accepted to an internship and now work full time."
+              "I had no hope of getting an internship this summer. But because
+              of this site, I got accepted to an internship and now work full
+              time."
             </blockquote>
             <cite className="text-purple-600 font-medium">- Sharon Kumari</cite>
           </div>

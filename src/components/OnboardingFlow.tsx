@@ -1,4 +1,3 @@
-import image_055c3f21905bc477ee2467fbb9eb21c4fb88caef from 'figma:asset/055c3f21905bc477ee2467fbb9eb21c4fb88caef.png';
 import jobTypesImage from 'figma:asset/30dd70664494df08a73424dbf4aa81b16c8fe83b.png';
 import skillsImage from 'figma:asset/bb6826290739ed42fc6dbd1966c0ea9d6bd41f8f.png';
 import transcriptImage from 'figma:asset/eea782ab9c0afa6981261c2e194eee38a39bfe52.png';

@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { Send, Bot, User, Download, FileText, Target, Lightbulb, Sparkles } from 'lucide-react';
+import { generateChatbotResponse } from '../services/chatbot.service';
 
 interface Message {
   id: string;
@@ -74,108 +75,38 @@ export function UnibotChat({ userProfile }: UnibotChatProps) {
     setMessages([welcomeMessage]);
   }, [userProfile]);
 
-  const generateBotResponse = (userMessage: string): Message => {
-    const lowerMessage = userMessage.toLowerCase();
-    let response = '';
-    let suggestions: string[] = [];
-    let actionButtons: ActionButton[] = [];
+  const generateBotResponse = async (userMessage: string): Promise<Message> => {
+    try {
+      setIsTyping(true);
+      const response = await generateChatbotResponse(userMessage, userProfile, messages);
 
-    // CV Creation Flow
-    if (lowerMessage.includes('cv') || lowerMessage.includes('resume') || lowerMessage.includes('create')) {
-      if (lowerMessage.includes('tailor') || lowerMessage.includes('specific')) {
-        setConversationContext('cv-tailoring');
-        response = "Perfect! I'll help you tailor your CV for a specific job. This involves analyzing job requirements and optimizing your CV accordingly.\n\nTo get started, I'll need:\n• The job title and description\n• Company name\n• Key requirements mentioned\n\nI'll then help you highlight relevant experience, adjust keywords, and structure your CV for maximum impact!";
-        suggestions = [
-          "I have a job posting to share",
-          "Frontend Developer position",
-          "Marketing role at startup",
-          "Software Engineering internship"
-        ];
-        actionButtons = [
-          { label: "Upload Job Description", action: "upload-job", variant: "outline" }
-        ];
-      } else {
-        setConversationContext('cv-creation');
-        response = `Great choice! Let me help you create a professional CV. Based on your profile, I can see you're studying ${userProfile?.program || 'at university'} with a CGPA of ${userProfile?.cgpa || 'strong academic performance'}.\n\nHere's what we'll include:\n\n✅ **Personal Information**\n✅ **Academic Background** (${userProfile?.program || 'Your program'})\n✅ **Skills** (${userProfile?.skills?.slice(0, 3).join(', ') || 'Technical skills'})\n✅ **Interests** (${userProfile?.interests?.slice(0, 2).join(', ') || 'Professional interests'})\n✅ **Experience & Projects**\n✅ **Achievements**\n\nWould you like me to create a template based on your profile?`;
-        actionButtons = [
-          { label: "Generate My CV Template", action: "generate-cv", variant: "default" },
-          { label: "Customize Sections", action: "customize-cv", variant: "outline" }
-        ];
-        suggestions = [
-          "Generate my CV template",
-          "What sections should I include?",
-          "Help me with work experience",
-          "How to highlight my skills?"
-        ];
-      }
+      // For now, return a simple message structure. In a full implementation,
+      // you might want to parse the AI response to extract suggestions and action buttons
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: response.response,
+        timestamp: new Date(response.timestamp),
+        suggestions: [], // Could be parsed from AI response if needed
+        actionButtons: [] // Could be parsed from AI response if needed
+      };
+    } catch (error) {
+      console.error('Error generating bot response:', error);
+      // Fallback to a generic response if API fails
+      return {
+        id: Date.now().toString(),
+        type: 'bot',
+        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        timestamp: new Date(),
+        suggestions: [],
+        actionButtons: []
+      };
+    } finally {
+      setIsTyping(false);
     }
-    // Career Path Exploration
-    else if (lowerMessage.includes('career') || lowerMessage.includes('path') || lowerMessage.includes('explore')) {
-      setConversationContext('career-exploration');
-      const programInsight = userProfile?.program ? ` in ${userProfile.program}` : '';
-      const skillsInsight = userProfile?.skills?.length ? ` Your skills in ${userProfile.skills.slice(0, 3).join(', ')} open up several exciting opportunities.` : '';
-      
-      response = `Excellent! Let's explore career paths that align with your background${programInsight}.${skillsInsight}\n\n🎯 **Popular Career Tracks:**\n• Technology & Software Development\n• Product Management\n• Data Science & Analytics\n• Digital Marketing\n• Consulting\n• Entrepreneurship\n\n📈 **Growth Areas:**\n• AI & Machine Learning\n• Cybersecurity\n• Green Technology\n• FinTech\n\nWhich area interests you most? I can provide detailed insights about salary ranges, required skills, and career progression!`;
-      
-      suggestions = [
-        "Software Development career",
-        "Data Science opportunities",
-        "Product Management path",
-        "Startup opportunities"
-      ];
-      actionButtons = [
-        { label: "Take Career Assessment", action: "career-assessment", variant: "default" }
-      ];
-    }
-    // Interview Tips
-    else if (lowerMessage.includes('interview') || lowerMessage.includes('tips')) {
-      response = "Great question! Here are my top interview success strategies:\n\n🎯 **Before the Interview:**\n• Research the company thoroughly\n• Practice STAR method (Situation, Task, Action, Result)\n• Prepare 3-5 thoughtful questions\n• Review your CV and be ready to explain everything\n\n💬 **During the Interview:**\n• Arrive 10-15 minutes early\n• Maintain good eye contact and body language\n• Use specific examples from your experience\n• Show enthusiasm and ask engaging questions\n\n✨ **Common Questions to Prepare:**\n• 'Tell me about yourself'\n• 'Why do you want this role?'\n• 'Describe a challenge you overcame'\n• 'Where do you see yourself in 5 years?'\n\nWould you like me to help you practice answers for any specific questions?";
-      suggestions = [
-        "Practice 'Tell me about yourself'",
-        "Help with technical questions",
-        "Mock interview simulation",
-        "Questions to ask interviewer"
-      ];
-    }
-    // Job-specific advice
-    else if (lowerMessage.includes('frontend') || lowerMessage.includes('developer')) {
-      response = "Frontend Development is an excellent career choice! Here's what makes a standout frontend developer:\n\n💻 **Essential Skills:**\n• JavaScript, HTML, CSS (Foundation)\n• React, Vue, or Angular (Frameworks)\n• TypeScript (Advanced)\n• Git & Version Control\n• Responsive Design\n• Testing (Jest, Cypress)\n\n🚀 **Portfolio Essentials:**\n• 3-5 diverse projects\n• Clean, responsive designs\n• Interactive features\n• Code on GitHub\n• Live demos\n\n📈 **Career Path:**\n• Junior Frontend Developer (GHC 3,000-6,000)\n• Frontend Developer (GHC 6,000-12,000)\n• Senior Frontend Developer (GHC 12,000-20,000)\n• Lead Developer/Architect (GHC 20,000+)\n\nWant me to help you create a frontend-focused CV?";
-      actionButtons = [
-        { label: "Create Frontend CV", action: "frontend-cv", variant: "default" },
-        { label: "Build Portfolio Guide", action: "portfolio-guide", variant: "outline" }
-      ];
-    }
-    // General responses
-    else if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-      response = "Hello there! Ready to boost your career? I'm here to help with CV creation, job applications, career guidance, and more. What would you like to work on today?";
-      suggestions = [
-        "Create a professional CV",
-        "Explore career opportunities",
-        "Get job application tips",
-        "Practice interview skills"
-      ];
-    }
-    else {
-      response = "I understand you're looking for career guidance! I specialize in:\n\n📄 **CV & Resume Help**\n• Creating professional CVs\n• Tailoring for specific jobs\n• Optimizing keywords\n• Industry-specific formats\n\n🎯 **Career Guidance**\n• Exploring career paths\n• Skills development\n• Industry insights\n• Salary expectations\n\n💼 **Job Search Support**\n• Application strategies\n• Interview preparation\n• Professional networking\n• Portfolio building\n\nWhat specific area would you like to focus on?";
-      suggestions = [
-        "Help me create a CV",
-        "Explore career paths",
-        "Prepare for interviews",
-        "Build my portfolio"
-      ];
-    }
-
-    return {
-      id: Date.now().toString(),
-      type: 'bot',
-      content: response,
-      timestamp: new Date(),
-      suggestions,
-      actionButtons
-    };
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
     const userMessage: Message = {
@@ -186,15 +117,17 @@ export function UnibotChat({ userProfile }: UnibotChatProps) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate bot response delay
-    setTimeout(() => {
-      const botResponse = generateBotResponse(inputValue);
+    try {
+      const botResponse = await generateBotResponse(currentInput);
       setMessages(prev => [...prev, botResponse]);
-      setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error);
+      // Error handling is already in generateBotResponse
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
