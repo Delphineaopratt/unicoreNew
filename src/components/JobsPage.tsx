@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface JobApplication {
   id: string;
@@ -34,13 +34,18 @@ interface Job {
 }
 
 interface JobsPageProps {
-  onStartOnboarding: () => void;
-  applications: JobApplication[];
-  jobNotifications: JobNotification[];
+  onStartOnboarding?: () => void;
+  applications?: JobApplication[];
+  jobNotifications?: JobNotification[];
   onApplyToJob: (job: Job) => void;
 }
 
-export function JobsPage({ onStartOnboarding, applications, jobNotifications, onApplyToJob }: JobsPageProps) {
+export function JobsPage({ 
+  onStartOnboarding, 
+  applications = [], 
+  jobNotifications = [], 
+  onApplyToJob 
+}: JobsPageProps) {
   const [activeTab, setActiveTab] = useState('featured');
 
   const featuredJobs: Job[] = [

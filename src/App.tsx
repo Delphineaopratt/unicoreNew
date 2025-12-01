@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
 import { StudentNavigation } from './components/StudentNavigation';
 import { JobPostingForm } from './components/JobPostingForm';
@@ -130,13 +131,61 @@ interface HostelNotification {
   read: boolean;
 }
 
+// Protected Route Component
+function ProtectedRoute({ 
+  children, 
+  isAuthenticated, 
+  redirectTo = "/" 
+}: { 
+  children: React.ReactNode; 
+  isAuthenticated: boolean;
+  redirectTo?: string;
+}) {
+  return isAuthenticated ? <>{children}</> : <Navigate to={redirectTo} replace />;
+}
+
+// Layout Components
+function DashboardLayout({ 
+  children, 
+  userType,
+  onLogout 
+}: { 
+  children: React.ReactNode; 
+  userType: 'student' | 'employer' | 'hostel-admin' | null;
+  onLogout: () => void;
+}) {
+  if (userType === 'hostel-admin') {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      {userType === 'student' ? <StudentNavigation onLogout={onLogout} /> : <Navigation onLogout={onLogout} />}
+      <main className="flex-1">{children}</main>
+    </div>
+  );
+}
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('landing');
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loginUserType, setLoginUserType] = useState<'student' | 'employer' | 'hostel-admin' | null>(null);
-  const [signupUserType, setSignupUserType] = useState<'student' | 'employer' | 'hostel-admin' | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userType, setUserType] = useState<'student' | 'employer' | 'hostel-admin' | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check if user is authenticated on mount
+    return !!localStorage.getItem('token');
+  });
+  const [userType, setUserType] = useState<'student' | 'employer' | 'hostel-admin' | null>(() => {
+    // Restore user type from localStorage
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const parsedUser = JSON.parse(user);
+        return parsedUser.userType || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   const [selectedHostelId, setSelectedHostelId] = useState<string | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -146,19 +195,16 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showProfileUpdatedModal, setShowProfileUpdatedModal] = useState(false);
   const [selectedJobForApplication, setSelectedJobForApplication] = useState<Job | null>(null);
+  const [hostelNotifications, setHostelNotifications] = useState<HostelNotification[]>([]);
+  
   const [hostelsData, setHostelsData] = useState<HostelData[]>([
     {
       id: '1',
       name: "Stephanie's Hostel",
       location: "Westlands",
-      description: "Stephanie's Hostel is located at Westlands, near Bethel Dental Clinic, on the 19th Street of Nii Lane. We have comfortable single and shared rooms coming at affordable prices. Each single room is equipped with modern amenities. Shared rooms are spacious and well-maintained.",
+      description: "Stephanie's Hostel is located at Westlands, near Bethel Dental Clinic, on the 19th Street of Nii Lane.",
       availableRooms: 6,
-      photos: [
-        {
-          id: '1',
-          url: "https://images.unsplash.com/photo-1733348610896-52e34b27e70d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBob3N0ZWwlMjBleHRlcmlvciUyMGJ1aWxkaW5nfGVufDF8fHx8MTc1ODc0NjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-        }
-      ],
+      photos: [{ id: '1', url: "https://images.unsplash.com/photo-1733348610896-52e34b27e70d" }],
       rooms: [
         {
           id: '1',
@@ -166,63 +212,20 @@ export default function App() {
           amenities: ['Shared room of 4', 'Shared bathroom', 'Shared kitchen', 'Balcony'],
           price: 2000,
           availableRooms: 1,
-          photos: [
-            {
-              id: '1',
-              url: "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxob3N0ZWwlMjBkb3JtaXRvcnklMjByb29tJTIwYnVuayUyMGJlZHN8ZW58MXx8fHwxNzU4NzQ2NTAxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-            }
-          ],
+          photos: [{ id: '1', url: "https://images.unsplash.com/photo-1709805619372-40de3f158e83" }],
           hostelId: '1'
-        },
-        {
-          id: '2',
-          name: 'Room 5',
-          amenities: ['Single room', 'Single bathroom', 'Single kitchen', 'Balcony'],
-          price: 8000,
-          availableRooms: 1,
-          photos: [
-            {
-              id: '1',
-              url: "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxob3N0ZWwlMjBkb3JtaXRvcnklMjByb29tJTIwYnVuayUyMGJlZHN8ZW58MXx8fHwxNzU4NzQ2NTAxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-            }
-          ],
-          hostelId: '1'
-        }
-      ]
-    },
-    {
-      id: '2',
-      name: "Joyous Hostel",
-      location: "Dansoman",
-      description: "A modern hostel with excellent facilities and comfortable accommodation for students.",
-      availableRooms: 3,
-      photos: [
-        {
-          id: '1',
-          url: "https://images.unsplash.com/photo-1733348610896-52e34b27e70d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBob3N0ZWwlMjBleHRlcmlvciUyMGJ1aWxkaW5nfGVufDF8fHx8MTc1ODc0NjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-        }
-      ],
-      rooms: [
-        {
-          id: '3',
-          name: 'Room 10',
-          amenities: ['Shared room of 4', 'Shared bathroom', 'Shared kitchen', 'Balcony'],
-          price: 2000,
-          availableRooms: 1,
-          photos: [
-            {
-              id: '1',
-              url: "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxob3N0ZWwlMjBkb3JtaXRvcnklMjByb29tJTIwYnVuayUyMGJlZHN8ZW58MXx8fHwxNzU4NzQ2NTAxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-            }
-          ],
-          hostelId: '2'
         }
       ]
     }
   ]);
-  const [hostelNotifications, setHostelNotifications] = useState<HostelNotification[]>([]);
 
-  const handleJobAdded = (newJob: Job) => {
+  // Handlers
+  const handleJobAdded = (job: Omit<Job, 'id' | 'applications'>) => {
+    const newJob: Job = {
+      ...job,
+      id: Date.now(),
+      applications: 0,
+    };
     setJobs(prev => [...prev, newJob]);
   };
 
@@ -232,66 +235,96 @@ export default function App() {
 
   const handleViewJob = (job: Job) => {
     console.log('Viewing job:', job);
-    // You can implement a job details modal or page here
   };
 
   const handleEditJob = (job: Job) => {
     console.log('Editing job:', job);
-    // You can implement job editing functionality here
   };
 
-  const handleShowLogin = (userType: 'student' | 'employer' | 'hostel-admin') => {
-    setLoginUserType(userType);
-    setCurrentPage('login');
+  const handleShowLogin = () => {
+    navigate('/login');
   };
 
-  const handleShowSignup = (userType: 'student' | 'employer' | 'hostel-admin') => {
-    setSignupUserType(userType);
-    setCurrentPage('signup');
+  const handleShowSignup = () => {
+    navigate('/signup');
   };
 
-  const handleLogin = (credentials: { id: string; password: string }) => {
-    console.log('Login attempted:', credentials);
-    // Here you would typically validate credentials
-    setIsAuthenticated(true);
-    setUserType(loginUserType);
-    
-    // Route to appropriate dashboard based on user type
-    if (loginUserType === 'student') {
-      setCurrentPage('student-dashboard');
-    } else if (loginUserType === 'hostel-admin') {
-      setCurrentPage('hostel-management');
-    } else {
-      setCurrentPage('dashboard'); // employer dashboard
+  const handleLogin = async (credentials: { id: string; password: string; userType: 'student' | 'employer' | 'hostel-admin' }) => {
+    try {
+      console.log('Login attempted:', credentials);
+      const { login } = await import('./services/auth.service');
+      
+      // Call the login API - id field is used as email
+      const response = await login(credentials.id, credentials.password);
+      
+      console.log('Login successful:', response);
+      setIsAuthenticated(true);
+      setUserType(credentials.userType);
+      
+      if (credentials.userType === 'student') {
+        navigate('/student/dashboard');
+      } else if (credentials.userType === 'hostel-admin') {
+        navigate('/hostel/dashboard');
+      } else {
+        navigate('/employer/dashboard');
+      }
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      alert(error.response?.data?.message || 'Login failed. Please check your credentials.')
     }
   };
 
-  const handleSignup = (userData: any) => {
-    console.log('Signup attempted:', userData);
-    // Here you would typically create the user account
-    setIsAuthenticated(true);
-    setUserType(signupUserType);
-    
-    // Route to appropriate dashboard based on user type
-    if (signupUserType === 'student') {
-      setCurrentPage('student-dashboard');
-    } else if (signupUserType === 'hostel-admin') {
-      setCurrentPage('hostel-management');
-    } else {
-      setCurrentPage('dashboard'); // employer dashboard
+  const handleSignup = async (userData: any) => {
+    try {
+      console.log('Signup attempted:', userData);
+      // Import register at the top if not already imported
+      const { register } = await import('./services/auth.service');
+      
+      // Call the register API with the correct fields
+      const response = await register(
+        userData.email,
+        userData.password,
+        userData.fullName,
+        userData.userType
+      );
+      
+      console.log('Signup successful:', response);
+      setIsAuthenticated(true);
+      setUserType(userData.userType);
+      
+      if (userData.userType === 'student') {
+        navigate('/student/dashboard');
+      } else if (userData.userType === 'hostel-admin') {
+        navigate('/hostel/dashboard');
+      } else {
+        navigate('/employer/dashboard');
+      }
+    } catch (error: any) {
+      console.error('Signup failed:', error);
+      alert(error.response?.data?.message || 'Signup failed. Please try again.');
     }
   };
 
   const handleBackToLanding = () => {
-    setCurrentPage('landing');
-    setLoginUserType(null);
-    setSignupUserType(null);
+    navigate('/');
+  };
+
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Clear state
+    setIsAuthenticated(false);
+    setUserType(null);
+    
+    // Navigate to home
+    navigate('/');
   };
 
   const handleBooking = (booking: Booking) => {
     setBookings(prev => [...prev, booking]);
     
-    // Add notification for student
     const notification: Notification = {
       id: Date.now().toString(),
       title: 'Booking Confirmed',
@@ -302,7 +335,6 @@ export default function App() {
     };
     setNotifications(prev => [...prev, notification]);
 
-    // Add notification for hostel admin
     const hostelNotification: HostelNotification = {
       id: Date.now().toString(),
       title: 'New Booking',
@@ -317,7 +349,6 @@ export default function App() {
   const handleJobApplication = (application: JobApplication) => {
     setJobApplications(prev => [...prev, application]);
     
-    // Add job notification
     const notification: JobNotification = {
       id: Date.now().toString(),
       title: 'Application Submitted',
@@ -331,43 +362,23 @@ export default function App() {
 
   const handleApplyToJob = (job: Job) => {
     setSelectedJobForApplication(job);
-    setCurrentPage('job-application');
+    navigate('/student/job-application');
   };
 
   const handleStartOnboarding = () => {
     setIsOnboardingActive(true);
   };
 
-  const handleOnboardingComplete = (data: { 
-    program: string; 
-    cgpa: string; 
-    jobTypes: string[]; 
-    skills: string[]; 
-    interests: string[]; 
-    transcript: File | null;
-  }) => {
+  const handleOnboardingComplete = (data: UserProfile) => {
     console.log('Onboarding completed:', data);
-    
-    // Create user profile from onboarding data
-    const newProfile: UserProfile = {
-      ...data,
-      name: 'Student', // Default name, can be updated later
-      email: '', // Will be filled when user edits profile
-      phone: '',
-      location: '',
-      bio: '',
-      profilePicture: ''
-    };
-    
-    setUserProfile(newProfile);
+    setUserProfile(data);
     setIsOnboardingActive(false);
     setShowProfileUpdatedModal(true);
     
-    // Add a welcome notification
     const notification: JobNotification = {
       id: Date.now().toString(),
       title: 'Profile Personalized',
-      message: `Great! Your job feed has been personalized for ${data.program} students. Selected ${data.jobTypes.length} job types and ${data.skills.length + data.interests.length} skills/interests.`,
+      message: `Great! Your job feed has been personalized.`,
       date: new Date().toISOString(),
       type: 'recommendation',
       read: false
@@ -383,7 +394,6 @@ export default function App() {
     setUserProfile(updatedProfile);
     setShowProfileUpdatedModal(true);
     
-    // Add profile update notification
     const notification: JobNotification = {
       id: Date.now().toString(),
       title: 'Profile Updated',
@@ -395,171 +405,13 @@ export default function App() {
     setJobNotifications(prev => [...prev, notification]);
   };
 
-  const renderCurrentPage = () => {
-    if (!isAuthenticated) {
-      switch (currentPage) {
-        case 'login':
-          return (
-            <LoginForm
-              userType={loginUserType!}
-              onBack={handleBackToLanding}
-              onLogin={handleLogin}
-            />
-          );
-        case 'signup':
-          return (
-            <SignupForm
-              userType={signupUserType!}
-              onBack={handleBackToLanding}
-              onSignup={handleSignup}
-            />
-          );
-        default:
-          return (
-            <LandingPage
-              onShowLogin={handleShowLogin}
-              onShowSignup={handleShowSignup}
-            />
-          );
-      }
-    }
-
-    // Authenticated pages - Student
-    if (userType === 'student') {
-      switch (currentPage) {
-        case 'student-dashboard':
-          return <StudentDashboard />;
-        case 'hostels':
-          return (
-            <HostelBooking
-              onBack={() => setCurrentPage('student-dashboard')}
-              onViewHostel={(hostelId) => {
-                setSelectedHostelId(hostelId);
-                setCurrentPage('hostel-details');
-              }}
-              bookings={bookings}
-              notifications={notifications}
-              hostelsData={hostelsData}
-            />
-          );
-        case 'hostel-details':
-          return (
-            <HostelDetails
-              onBack={() => setCurrentPage('hostels')}
-              hostelId={selectedHostelId || ''}
-              onBooking={handleBooking}
-            />
-          );
-        case 'jobs':
-          return (
-            <JobsPage
-              onStartOnboarding={handleStartOnboarding}
-              applications={jobApplications}
-              jobNotifications={jobNotifications}
-              onApplyToJob={handleApplyToJob}
-            />
-          );
-        case 'job-application':
-          return selectedJobForApplication ? (
-            <JobApplicationForm
-              job={selectedJobForApplication}
-              userProfile={userProfile}
-              onBack={() => setCurrentPage('jobs')}
-              onSubmitApplication={handleJobApplication}
-            />
-          ) : null;
-        case 'chat':
-          return (
-            <UnibotChat userProfile={userProfile} />
-          );
-        case 'profile':
-          return (
-            <MyProfile
-              userProfile={userProfile}
-              onUpdateProfile={handleUpdateProfile}
-            />
-          );
-        default:
-          return <StudentDashboard />;
-      }
-    }
-
-    // Authenticated pages - Hostel Admin
-    if (userType === 'hostel-admin') {
-      return (
-        <HostelManagementDashboard 
-          hostels={hostelsData}
-          setHostels={setHostelsData}
-          notifications={hostelNotifications}
-          setNotifications={setHostelNotifications}
-        />
-      );
-    }
-
-    // Authenticated pages - Employer
-    switch (currentPage) {
-      case 'dashboard':
-        return (
-          <JobPostingForm 
-            onJobAdded={handleJobAdded}
-            onNavigateToJobListings={() => setCurrentPage('job-listings')}
-          />
-        );
-      case 'applications':
-        return <ApplicationsPage onBack={() => setCurrentPage('dashboard')} />;
-      case 'candidates':
-        return <CandidatesPage onBack={() => setCurrentPage('dashboard')} />;
-      case 'job-listings':
-        return (
-          <JobListingsPage 
-            jobs={jobs}
-            onBack={() => setCurrentPage('dashboard')}
-            onViewJob={handleViewJob}
-            onEditJob={handleEditJob}
-            onDeleteJob={handleDeleteJob}
-          />
-        );
-      default:
-        return (
-          <JobPostingForm 
-            onJobAdded={handleJobAdded}
-            onNavigateToJobListings={() => setCurrentPage('job-listings')}
-          />
-        );
-    }
-  };
-
-  // Show full-screen pages for non-authenticated users or onboarding
-  if (!isAuthenticated || isOnboardingActive) {
-    if (isOnboardingActive && isAuthenticated) {
-      return (
-        <>
-          <OnboardingFlow
-            onComplete={handleOnboardingComplete}
-            onCancel={handleOnboardingCancel}
-          />
-          <Toaster />
-        </>
-      );
-    }
+  // Onboarding overlay
+  if (isOnboardingActive && isAuthenticated) {
     return (
       <>
-        {renderCurrentPage()}
-        <Toaster />
-      </>
-    );
-  }
-
-  // Show dashboard layout for authenticated users
-  if (userType === 'hostel-admin') {
-    // Hostel admin has integrated navigation in the dashboard
-    return (
-      <>
-        {renderCurrentPage()}
-        <ProfileUpdatedModal
-          isOpen={showProfileUpdatedModal}
-          onClose={() => setShowProfileUpdatedModal(false)}
-          isInitialSetup={userProfile && !userProfile.email}
+        <OnboardingFlow
+          onComplete={handleOnboardingComplete}
+          onCancel={handleOnboardingCancel}
         />
         <Toaster />
       </>
@@ -567,21 +419,169 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {userType === 'student' ? (
-        <StudentNavigation currentPage={currentPage} onPageChange={setCurrentPage} />
-      ) : (
-        <Navigation currentPage={currentPage} onPageChange={setCurrentPage} />
-      )}
-      <main className="flex-1">
-        {renderCurrentPage()}
-      </main>
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={
+          isAuthenticated ? (
+            <Navigate 
+              to={
+                userType === 'student' 
+                  ? '/student/dashboard' 
+                  : userType === 'hostel-admin' 
+                    ? '/hostel/dashboard' 
+                    : '/employer/dashboard'
+              } 
+              replace 
+            />
+          ) : (
+            <LandingPage onLogin={handleShowLogin} onSignup={handleShowSignup} />
+          )
+        } />
+        <Route 
+          path="/login" 
+          element={
+            isAuthenticated ? (
+              <Navigate 
+                to={
+                  userType === 'student' 
+                    ? '/student/dashboard' 
+                    : userType === 'hostel-admin' 
+                      ? '/hostel/dashboard' 
+                      : '/employer/dashboard'
+                } 
+                replace 
+              />
+            ) : (
+              <LoginForm 
+                onLogin={handleLogin} 
+                onBack={handleBackToLanding} 
+              />
+            )
+          } 
+        />
+        <Route 
+          path="/signup" 
+          element={
+            isAuthenticated ? (
+              <Navigate 
+                to={
+                  userType === 'student' 
+                    ? '/student/dashboard' 
+                    : userType === 'hostel-admin' 
+                      ? '/hostel/dashboard' 
+                      : '/employer/dashboard'
+                } 
+                replace 
+              />
+            ) : (
+              <SignupForm 
+                onSignup={handleSignup} 
+                onBack={handleBackToLanding} 
+              />
+            )
+          } 
+        />
+
+        {/* Student Routes */}
+        <Route path="/student/*" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated && userType === 'student'}>
+            <DashboardLayout userType={userType} onLogout={handleLogout}>
+              <Routes>
+                <Route path="dashboard" element={
+                  <StudentDashboard
+                    bookings={bookings}
+                    notifications={notifications}
+                    setNotifications={setNotifications}
+                    jobApplications={jobApplications}
+                    jobNotifications={jobNotifications}
+                    setJobNotifications={setJobNotifications}
+                    onStartOnboarding={handleStartOnboarding}
+                  />
+                } />
+                <Route path="hostels" element={<HostelBooking />} />
+                <Route path="hostel-details" element={
+                  <HostelDetails
+                    hostelId={selectedHostelId || '1'}
+                    onBooking={handleBooking}
+                  />
+                } />
+                <Route path="jobs" element={
+                  <JobsPage onApplyToJob={handleApplyToJob} />
+                } />
+                <Route path="job-application" element={
+                  <JobApplicationForm
+                    job={selectedJobForApplication}
+                    onSubmit={handleJobApplication}
+                  />
+                } />
+                <Route path="chat" element={<UnibotChat />} />
+                <Route path="profile" element={
+                  <MyProfile
+                    userProfile={userProfile}
+                    onUpdateProfile={handleUpdateProfile}
+                  />
+                } />
+                <Route path="*" element={<Navigate to="/student/dashboard" replace />} />
+              </Routes>
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Employer Routes */}
+        <Route path="/employer/*" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated && userType === 'employer'}>
+            <DashboardLayout userType={userType} onLogout={handleLogout}>
+              <Routes>
+                <Route path="dashboard" element={
+                  <JobPostingForm onJobAdded={handleJobAdded} />
+                } />
+                <Route path="job-listings" element={
+                  <JobListingsPage
+                    jobs={jobs}
+                    onViewJob={handleViewJob}
+                    onEditJob={handleEditJob}
+                    onDeleteJob={handleDeleteJob}
+                  />
+                } />
+                <Route path="applications" element={<ApplicationsPage />} />
+                <Route path="candidates" element={<CandidatesPage />} />
+                <Route path="*" element={<Navigate to="/employer/dashboard" replace />} />
+              </Routes>
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Hostel Admin Routes */}
+        <Route path="/hostel/*" element={
+          <ProtectedRoute isAuthenticated={isAuthenticated && userType === 'hostel-admin'}>
+            <DashboardLayout userType={userType} onLogout={handleLogout}>
+              <Routes>
+                <Route path="dashboard" element={
+                  <HostelManagementDashboard
+                    hostels={hostelsData}
+                    setHostels={setHostelsData}
+                    notifications={hostelNotifications}
+                    setNotifications={setHostelNotifications}
+                    onLogout={handleLogout}
+                  />
+                } />
+                <Route path="*" element={<Navigate to="/hostel/dashboard" replace />} />
+              </Routes>
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* Catch all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
       <ProfileUpdatedModal
         isOpen={showProfileUpdatedModal}
         onClose={() => setShowProfileUpdatedModal(false)}
         isInitialSetup={userProfile && !userProfile.email}
       />
       <Toaster />
-    </div>
+    </>
   );
 }

@@ -2,15 +2,22 @@ import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 interface SignupFormProps {
-  userType: 'student' | 'employer' | 'hostel-admin';
   onBack: () => void;
   onSignup: (userData: any) => void;
 }
 
-export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
+export function SignupForm({ onBack, onSignup }: SignupFormProps) {
   const [formData, setFormData] = useState({
+    userType: '' as 'student' | 'employer' | 'hostel-admin' | '',
     fullName: '',
     email: '',
     id: '',
@@ -25,6 +32,10 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.userType) {
+      alert('Please select your role');
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match');
       return;
@@ -32,21 +43,8 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
     onSignup(formData);
   };
 
-  const getTitle = () => {
-    switch (userType) {
-      case 'student':
-        return 'Sign up (For Students)';
-      case 'employer':
-        return 'Sign up (For Employers)';
-      case 'hostel-admin':
-        return 'Sign up (For Hostel Admins)';
-      default:
-        return 'Sign up';
-    }
-  };
-
   const getIdLabel = () => {
-    switch (userType) {
+    switch (formData.userType) {
       case 'student':
         return 'Student ID';
       case 'employer':
@@ -59,20 +57,20 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
   };
 
   const getEmailLabel = () => {
-    switch (userType) {
+    switch (formData.userType) {
       case 'student':
-        return 'School email';
+        return 'School Email';
       case 'employer':
-        return 'Company email';
+        return 'Company Email';
       case 'hostel-admin':
-        return 'Admin email';
+        return 'Admin Email';
       default:
         return 'Email';
     }
   };
 
   const getEmailPlaceholder = () => {
-    switch (userType) {
+    switch (formData.userType) {
       case 'student':
         return 'example@student.edu.gh';
       case 'employer':
@@ -85,7 +83,7 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
   };
 
   const getIdPlaceholder = () => {
-    switch (userType) {
+    switch (formData.userType) {
       case 'student':
         return '2023001';
       case 'employer':
@@ -108,15 +106,34 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
       </button>
 
       {/* Signup Card */}
-      <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900">{getTitle()}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Sign Up for Unicore</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-1">
+              I am a
+            </label>
+            <Select
+              value={formData.userType}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, userType: value as 'student' | 'employer' | 'hostel-admin' }))}
+            >
+              <SelectTrigger className="w-full h-11 bg-gray-50 border-0">
+                <SelectValue placeholder="Select your role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="employer">Employer</SelectItem>
+                <SelectItem value="hostel-admin">Hostel Administrator</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-              Full name
+              Full Name
             </label>
             <Input
               id="fullName"
@@ -125,6 +142,7 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
               value={formData.fullName}
               onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
               className="w-full h-11 bg-gray-50 border-0 text-gray-900 placeholder-gray-500"
+              disabled={!formData.userType}
               required
             />
           </div>
@@ -140,13 +158,14 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               className="w-full h-11 bg-gray-50 border-0 text-gray-900 placeholder-gray-500"
+              disabled={!formData.userType}
               required
             />
           </div>
 
           <div>
             <label htmlFor="id" className="block text-sm font-medium text-gray-700 mb-1">
-              {getIdLabel()}
+              {getIdLabel()} <span className="text-gray-400 text-xs">(Optional)</span>
             </label>
             <Input
               id="id"
@@ -155,14 +174,14 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
               value={formData.id}
               onChange={(e) => setFormData(prev => ({ ...prev, id: e.target.value }))}
               className="w-full h-11 bg-gray-50 border-0 text-gray-900 placeholder-gray-500"
-              required
+              disabled={!formData.userType}
             />
           </div>
 
-          {userType === 'employer' && (
+          {formData.userType === 'employer' && (
             <div>
               <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                Company Name
+                Company Name <span className="text-gray-400 text-xs">(Optional)</span>
               </label>
               <Input
                 id="companyName"
@@ -171,16 +190,15 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
                 value={formData.companyName}
                 onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
                 className="w-full h-11 bg-gray-50 border-0 text-gray-900 placeholder-gray-500"
-                required
               />
             </div>
           )}
 
-          {userType === 'hostel-admin' && (
+          {formData.userType === 'hostel-admin' && (
             <>
               <div>
                 <label htmlFor="hostelName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Hostel Name
+                  Hostel Name <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
                 <Input
                   id="hostelName"
@@ -189,12 +207,11 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
                   value={formData.hostelName}
                   onChange={(e) => setFormData(prev => ({ ...prev, hostelName: e.target.value }))}
                   className="w-full h-11 bg-gray-50 border-0 text-gray-900 placeholder-gray-500"
-                  required
                 />
               </div>
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
+                  Phone Number <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
                 <Input
                   id="phone"
@@ -203,7 +220,6 @@ export function SignupForm({ userType, onBack, onSignup }: SignupFormProps) {
                   value={formData.phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                   className="w-full h-11 bg-gray-50 border-0 text-gray-900 placeholder-gray-500"
-                  required
                 />
               </div>
             </>

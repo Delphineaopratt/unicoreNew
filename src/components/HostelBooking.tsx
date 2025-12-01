@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { MapPin, BedDouble, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { MapPin, BedDouble, ArrowLeft, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Select,
@@ -12,14 +13,11 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Hostel, Booking, Notification } from "../types";
 import { getAllHostels } from "../services/hostel.service";
 import { getMyBookings, createBooking } from "../services/booking.service";
+import { toast } from "sonner";
 // import { isAuthenticated } from "../services/auth.service";
 
-interface HostelBookingProps {
-  onBack: () => void;
-  onViewHostel: (hostelId: string) => void;
-}
-
-export function HostelBooking({ onBack, onViewHostel }: HostelBookingProps) {
+export function HostelBooking() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("explore");
   const [selectedUniversity, setSelectedUniversity] = useState("");
   const [hostels, setHostels] = useState<Hostel[]>([]);
@@ -27,6 +25,8 @@ export function HostelBooking({ onBack, onViewHostel }: HostelBookingProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   useEffect(() => {
     fetchHostels();
@@ -37,12 +37,16 @@ export function HostelBooking({ onBack, onViewHostel }: HostelBookingProps) {
 
   const fetchHostels = async () => {
     try {
+      setLoading(true);
       const data = await getAllHostels();
       setHostels(data as Hostel[]);
       setError(null);
-    } catch (err) {
-      setError("Failed to load hostels. Please try again.");
+      toast.success(`Loaded ${data.length} hostels`);
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to load hostels. Please try again.";
+      setError(errorMessage);
       console.error("Error fetching hostels:", err);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -53,18 +57,21 @@ export function HostelBooking({ onBack, onViewHostel }: HostelBookingProps) {
       const data = await getMyBookings();
       setBookings(data as Booking[]);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to load bookings";
       console.error("Error fetching bookings:", err);
+      toast.error(errorMessage);
     }
   };
 
   const handleBookingCreation = async (hostelId: string) => {
     // if (!isAuthenticated()) {
-    //   // Redirect to login or show login modal
+    //   toast.error("Please login to make a booking");
     //   return;
     // }
 
     try {
+      toast.loading("Creating booking...");
       await createBooking({
         hostel: hostelId,
         checkInDate: new Date().toISOString(),
@@ -72,10 +79,63 @@ export function HostelBooking({ onBack, onViewHostel }: HostelBookingProps) {
           Date.now() + 30 * 24 * 60 * 60 * 1000
         ).toISOString(), // 30 days from now
       });
+      toast.success("Booking created successfully!");
       fetchBookings(); // Refresh bookings after creation
-    } catch (err) {
+    } catch (err: any) {
+      const errorMessage = err?.message || "Failed to create booking";
       console.error("Error creating booking:", err);
+      toast.error(errorMessage);
     }
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    fetchHostels();
+  };
+
+  const handleEnableLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+
+    toast.loading("Getting your location...");
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ latitude, longitude });
+        setLocationEnabled(true);
+        toast.success(`Location enabled: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        console.log("User location:", { latitude, longitude });
+      },
+      (error) => {
+        let errorMessage = "Failed to get location";
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location permission denied. Please enable location access in your browser settings.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+        }
+        toast.error(errorMessage);
+        console.error("Geolocation error:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
+  const isAuthenticated = () => {
+    // Placeholder - will be replaced with actual auth check
+    return true;
   };
 
   const tabs = [
@@ -89,7 +149,7 @@ export function HostelBooking({ onBack, onViewHostel }: HostelBookingProps) {
       {/* Header */}
       <div className="bg-white p-6 border-b">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/student/dashboard')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h1 className="text-2xl font-semibold">Hostel Booking</h1>
@@ -121,39 +181,50 @@ export function HostelBooking({ onBack, onViewHostel }: HostelBookingProps) {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" className="mt-6">
+          <Button 
+            variant={locationEnabled ? "default" : "outline"} 
+            className="mt-6"
+            onClick={handleEnableLocation}
+          >
             <MapPin className="w-4 h-4 mr-2" />
-            Enable Location
+            {locationEnabled ? "Location Enabled" : "Enable Location"}
           </Button>
+          {locationEnabled && userLocation && (
+            <p className="text-xs text-gray-600 mt-2">
+              📍 Lat: {userLocation.latitude.toFixed(4)}, Lng: {userLocation.longitude.toFixed(4)}
+            </p>
+          )}
         </div>
       </div>
-
-      {/* Tabs */}
-      <div className="bg-white border-b">
-        <div className="flex">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Content */}
       <div className="p-6">
-        {loading && <div className="text-center py-12">Loading hostels...</div>}
-        {error && (
-          <div className="text-center py-12 text-red-600">Error: {error}</div>
+        {loading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading hostels...</p>
+          </div>
         )}
-        {!loading && !error && activeTab === "explore" && (
+        
+        {error && (
+          <div className="text-center py-12">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-red-900 mb-2">
+                Unable to Load Hostels
+              </h3>
+              <p className="text-red-700 mb-4">{error}</p>
+              <Button 
+                onClick={handleRetry}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
+          </div>
+        )
+        
+      }{!loading && !error && activeTab === "explore" && (
           <div>
             <h2 className="text-xl font-semibold mb-6">Hostel Listings</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -185,7 +256,7 @@ export function HostelBooking({ onBack, onViewHostel }: HostelBookingProps) {
 
                     <Button
                       className="w-full bg-blue-600 hover:bg-blue-700"
-                      onClick={() => onViewHostel(hostel._id)}
+                      onClick={() => navigate(`/student/hostel-details?id=${hostel._id}`)}
                     >
                       View Hostel
                     </Button>

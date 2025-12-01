@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
@@ -6,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
-import { ArrowLeft, Upload, FileText, CheckCircle, User, MapPin, Briefcase } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, CheckCircle, User, MapPin, Briefcase, AlertCircle } from 'lucide-react';
+import { validateAddress, validateCoverLetter, validateFile } from '../utils/validation';
+import { toast } from 'sonner';
 
 interface Job {
   id: number;
@@ -47,46 +50,139 @@ interface JobApplication {
 }
 
 interface JobApplicationFormProps {
-  job: Job;
-  userProfile: UserProfile | null;
-  onBack: () => void;
-  onSubmitApplication: (application: JobApplication) => void;
+  job: Job | null;
+  onSubmit: (application: JobApplication) => void;
 }
 
-export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplication }: JobApplicationFormProps) {
+export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
+  const navigate = useNavigate();
   const [address, setAddress] = useState('');
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [resume, setResume] = useState<File | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addressError, setAddressError] = useState('');
+  const [resumeError, setResumeError] = useState('');
+  const [coverLetterError, setCoverLetterError] = useState('');
 
   const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      const validation = validateFile(file, {
+        maxSizeMB: 5,
+        allowedTypes: ['.pdf', '.doc', '.docx'],
+        required: true
+      });
+      
+      if (!validation.isValid) {
+        setResumeError(validation.error || '');
+        setResume(null);
+        toast.error(validation.error);
+        return;
+      }
+      
       setResume(file);
+      setResumeError('');
+      toast.success('Resume uploaded successfully');
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAddressChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setAddress(value);
+    
+    // Clear error when user starts typing
+    if (addressError && value.trim().length > 0) {
+      setAddressError('');
+    }
+  };
+
+  const handleCoverLetterChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setCoverLetter(value);
+    
+    // Clear error when user starts typing
+    if (coverLetterError && value.trim().length > 0) {
+      setCoverLetterError('');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const application: JobApplication = {
-      id: Date.now().toString(),
-      jobTitle: job.title,
-      company: job.company,
-      appliedDate: new Date().toISOString(),
-      status: 'pending',
-      address,
-      resume,
-      coverLetter
-    };
+    // Reset errors
+    setAddressError('');
+    setResumeError('');
+    setCoverLetterError('');
+    
+    // Validate all fields
+    let hasErrors = false;
+    
+    const addressValidation = validateAddress(address);
+    if (!addressValidation.isValid) {
+      setAddressError(addressValidation.error || '');
+      hasErrors = true;
+    }
+    
+    const resumeValidation = validateFile(resume, {
+      maxSizeMB: 5,
+      allowedTypes: ['.pdf', '.doc', '.docx'],
+      required: true
+    });
+    if (!resumeValidation.isValid) {
+      setResumeError(resumeValidation.error || '');
+      hasErrors = true;
+    }
+    
+    const coverLetterValidation = validateCoverLetter(coverLetter);
+    if (!coverLetterValidation.isValid) {
+      setCoverLetterError(coverLetterValidation.error || '');
+      hasErrors = true;
+    }
+    
+    if (hasErrors) {
+  const isFormValid = () => {
+    return (
+      address.trim() !== '' && 
+      resume !== null && 
+      coverLetter.trim().length >= 100 &&
+      !addressError &&
+      !resumeError &&
+      !coverLetterError
+    );
+  };
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const application: JobApplication = {
+        id: Date.now().toString(),
+        jobTitle: job.title,
+        company: job.company,
+        appliedDate: new Date().toISOString(),
+        status: 'pending',
+        address,
+        resume,
+        coverLetter
+      };
 
-    onSubmitApplication(application);
-    setShowSuccessModal(true);
+      onSubmit(application);
+      setShowSuccessModal(true);
+      toast.success('Application submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      toast.error('Failed to submit application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
-    onBack();
+    navigate('/student/jobs');
   };
 
   const getInitials = (name?: string) => {
@@ -103,7 +199,7 @@ export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplicati
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" onClick={onBack} className="p-2">
+              <Button variant="ghost" onClick={() => navigate('/student/jobs')} className="p-2">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div>
@@ -147,45 +243,34 @@ export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplicati
             </Card>
 
             {/* Profile Summary */}
-            {userProfile && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    Your Profile
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={userProfile.profilePicture} alt="Profile" />
-                      <AvatarFallback>{getInitials(userProfile.name)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{userProfile.name || 'Student'}</p>
-                      <p className="text-sm text-gray-600">{userProfile.program}</p>
-                    </div>
-                  </div>
-                  
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Your Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-3 mb-4">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={userProfile?.profilePicture} />
+                    <AvatarFallback>{getInitials(userProfile?.name)}</AvatarFallback>
+                  </Avatar>
                   <div>
-                    <p className="text-sm font-medium mb-2">CGPA</p>
-                    <p className="text-gray-600">{userProfile.cgpa}</p>
+                    <p className="font-medium">{userProfile?.name || 'Student'}</p>
+                    <p className="text-sm text-gray-600">{userProfile?.email || 'Not provided'}</p>
                   </div>
-
-                  <div>
-                    <p className="text-sm font-medium mb-2">Skills</p>
-                    <div className="flex flex-wrap gap-1">
-                      {userProfile.skills.slice(0, 4).map((skill) => (
-                        <Badge key={skill} variant="secondary" className="text-xs">{skill}</Badge>
-                      ))}
-                      {userProfile.skills.length > 4 && (
-                        <Badge variant="secondary" className="text-xs">+{userProfile.skills.length - 4} more</Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Program</p>
+                  <p className="text-gray-600 text-sm">{userProfile?.program || 'Not specified'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">CGPA</p>
+                  <p className="text-gray-600 text-sm">{userProfile?.cgpa || 'N/A'}</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Application Form */}
@@ -197,45 +282,6 @@ export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplicati
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Pre-populated Profile Information */}
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-                    <h3 className="font-medium text-gray-800">Profile Information (Auto-filled)</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm mb-1">Full Name</label>
-                        <Input 
-                          value={userProfile?.name || 'Student'} 
-                          disabled 
-                          className="bg-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Email</label>
-                        <Input 
-                          value={userProfile?.email || 'student@university.edu'} 
-                          disabled 
-                          className="bg-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Phone</label>
-                        <Input 
-                          value={userProfile?.phone || 'Not provided'} 
-                          disabled 
-                          className="bg-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Program of Study</label>
-                        <Input 
-                          value={userProfile?.program || ''} 
-                          disabled 
-                          className="bg-white"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Address Field */}
                   <div>
                     <label className="block text-sm mb-2">
@@ -243,11 +289,21 @@ export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplicati
                     </label>
                     <Textarea
                       value={address}
-                      onChange={(e) => setAddress(e.target.value)}
+                      onChange={handleAddressChange}
                       placeholder="Enter your complete mailing address including street, city, state, and postal code"
                       rows={3}
                       required
+                      className={addressError ? 'border-red-500' : ''}
                     />
+                    {addressError && (
+                      <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{addressError}</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Minimum 10 characters
+                    </p>
                   </div>
 
                   {/* Resume Upload */}
@@ -255,7 +311,9 @@ export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplicati
                     <label className="block text-sm mb-2">
                       Resume/CV <span className="text-red-500">*</span>
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                    <div className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-gray-400 transition-colors ${
+                      resumeError ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}>
                       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-gray-600 mb-2">
                         Upload your resume or CV
@@ -277,11 +335,23 @@ export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplicati
                         Browse Files
                       </label>
                       
-                      {resume && (
+                      {resume && !resumeError && (
                         <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                           <div className="flex items-center justify-center gap-2">
                             <FileText className="w-4 h-4 text-green-600" />
                             <p className="text-sm text-green-700">✓ {resume.name}</p>
+                            <span className="text-xs text-gray-500">
+                              ({(resume.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {resumeError && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center justify-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-600" />
+                            <p className="text-sm text-red-700">{resumeError}</p>
                           </div>
                         </div>
                       )}
@@ -295,31 +365,27 @@ export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplicati
                     </label>
                     <Textarea
                       value={coverLetter}
-                      onChange={(e) => setCoverLetter(e.target.value)}
+                      onChange={handleCoverLetterChange}
                       placeholder="Write a compelling cover letter explaining why you're the perfect fit for this position. Highlight your relevant experience, skills, and enthusiasm for the role."
                       rows={8}
                       required
+                      className={coverLetterError ? 'border-red-500' : ''}
                     />
-                    <p className="text-sm text-gray-500 mt-1">
-                      {coverLetter.length} characters (recommended: 300-500 words)
-                    </p>
-                  </div>
-
-                  {/* Additional Information */}
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800 mb-2">Additional Profile Information</h4>
-                    <div className="space-y-2 text-sm">
-                      <p><span className="font-medium">CGPA:</span> {userProfile?.cgpa}</p>
-                      <p><span className="font-medium">Academic Transcript:</span> {userProfile?.transcript ? 'Uploaded' : 'Not provided'}</p>
-                      <div>
-                        <span className="font-medium">Skills:</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {userProfile?.skills.map((skill) => (
-                            <Badge key={skill} variant="secondary" className="text-xs">{skill}</Badge>
-                          ))}
-                        </div>
+                    {coverLetterError && (
+                      <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{coverLetterError}</span>
                       </div>
-                    </div>
+                    )}
+                    <p className={`text-sm mt-1 ${
+                      coverLetter.length < 100 ? 'text-red-500' : 
+                      coverLetter.length < 300 ? 'text-yellow-600' : 
+                      'text-green-600'
+                    }`}>
+                      {coverLetter.length} / 2000 characters 
+                      {coverLetter.length < 100 && ' (minimum 100 required)'}
+                      {coverLetter.length >= 100 && coverLetter.length < 300 && ' (recommended: 300-500 words)'}
+                    </p>
                   </div>
 
                   {/* Form Actions */}
@@ -327,17 +393,25 @@ export function JobApplicationForm({ job, userProfile, onBack, onSubmitApplicati
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={onBack}
+                      onClick={() => navigate('/student/jobs')}
                       className="flex-1"
+                      disabled={isSubmitting}
                     >
                       Cancel
                     </Button>
                     <Button 
                       type="submit"
-                      disabled={!isFormValid}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                      disabled={!isFormValid || isSubmitting}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Submit Application
+                      {isSubmitting ? (
+                        <>
+                          <span className="animate-spin mr-2">⏳</span>
+                          Submitting...
+                        </>
+                      ) : (
+                        'Submit Application'
+                      )}
                     </Button>
                   </div>
                 </form>

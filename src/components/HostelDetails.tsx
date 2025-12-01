@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, BedDouble, Users, Utensils, Car } from 'lucide-react';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BookingConfirmationModal } from './BookingConfirmationModal';
+import { getHostelById } from '../services/hostel.service';
+import { createBooking } from '../services/booking.service';
+import { Hostel, Room as RoomType } from '../types';
+import { toast } from 'sonner';
 
 interface Room {
   id: string;
@@ -25,14 +30,21 @@ interface Booking {
 }
 
 interface HostelDetailsProps {
-  onBack: () => void;
   hostelId: string;
   onBooking: (booking: Booking) => void;
 }
 
-export function HostelDetails({ onBack, hostelId, onBooking }: HostelDetailsProps) {
+export function HostelDetails({ hostelId, onBooking }: HostelDetailsProps) {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [hostel, setHostel] = useState<Hostel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchHostels();
+  }, [hostelId]);
 
   const rooms: Room[] = [
     {
@@ -86,18 +98,56 @@ export function HostelDetails({ onBack, hostelId, onBooking }: HostelDetailsProp
   ];
 
   const handleBookRoom = (roomId: string) => {
-    const room = rooms.find(r => r.id === roomId);
+    const availableRooms = hostel?.rooms || rooms;
+    const room = availableRooms.find(r => (r as any).id === roomId || (r as any)._id === roomId);
     if (room) {
-      setSelectedRoom(room);
+      // Convert Room type if needed
+      const roomForModal: Room = {
+        id: (room as any)._id || (room as any).id,
+        name: (room as any).name || room.name,
+        type: (room as any).type || room.type,
+        features: (room as any).amenities || (room as any).features || [],
+        price: `GHS ${(room as any).price || room.price}`,
+        image: ((room as any).photos && (room as any).photos[0]) || (room as any).image || ''
+      };
+      setSelectedRoom(roomForModal);
       setIsModalOpen(true);
     }
   };
 
-  const handleConfirmBooking = () => {
-    if (selectedRoom) {
+  const fetchHostels = async () => {
+    try {
+      setLoading(true);
+      const data = await getHostelById(hostelId);
+      setHostel(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching hostel:', err);
+      setError('Failed to load hostel details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!selectedRoom || !hostel) return;
+
+    try {
+      // Create booking via API
+      const bookingData: any = {
+        hostel: hostelId,
+        room: selectedRoom.id,
+        checkInDate: new Date().toISOString(),
+        checkOutDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        status: 'pending' as const
+      };
+
+      await createBooking(bookingData);
+
+      // Create local booking object for UI update
       const booking: Booking = {
         id: Date.now().toString(),
-        hostelName: "Stephanie's Hostel",
+        hostelName: hostel.name,
         roomName: selectedRoom.name,
         roomType: selectedRoom.type,
         price: selectedRoom.price,
@@ -109,15 +159,57 @@ export function HostelDetails({ onBack, hostelId, onBooking }: HostelDetailsProp
       onBooking(booking);
       setIsModalOpen(false);
       setSelectedRoom(null);
+      toast.success('Booking confirmed successfully!');
+    } catch (err) {
+      console.error('Error creating booking:', err);
+      toast.error('Failed to create booking. Please try again.');
+      throw err; // Re-throw to let modal handle it
     }
   };
+
+  const displayRooms = hostel?.rooms || rooms;
+  const displayHostelName = hostel?.name || "Stephanie's Hostel";
+  const displayHostelDescription = hostel?.description || 
+    "Stephanie's Hostel is located at Kisseman, near Bethel Dental Clinic, on the 19th Street of Nii Lane. We have comfortable single and shared rooms coming at affordable prices. Each single room is equipped with... Shared rooms are...";
+
+  if (loading) {
+    return (
+      <div className="flex-1 bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading hostel details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 bg-gray-50">
+        <div className="bg-white p-6 border-b">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/student/hostels')}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <h1 className="text-2xl font-semibold">Hostel Details</h1>
+          </div>
+        </div>
+        <div className="p-6 text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => fetchHostels()} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 bg-gray-50">
       {/* Header */}
       <div className="bg-white p-6 border-b">
         <div className="flex items-center gap-4 mb-4">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/student/hostels')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h1 className="text-2xl font-semibold">Hostel Description</h1>

@@ -4,8 +4,10 @@ import transcriptImage from 'figma:asset/eea782ab9c0afa6981261c2e194eee38a39bfe5
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { ArrowLeft, Upload, Laptop, BarChart3, Target, DollarSign, Palette, Heart, GraduationCap, Leaf } from 'lucide-react';
+import { ArrowLeft, Upload, Laptop, BarChart3, Target, DollarSign, Palette, Heart, GraduationCap, Leaf, AlertCircle } from 'lucide-react';
 import exampleImage from 'figma:asset/102658a6042355a01636c119d3e40b949234fe74.png';
+import { validateProgram, validateCGPA, validateFile, validateSelection } from '../utils/validation';
+import { toast } from 'sonner';
 
 interface OnboardingFlowProps {
   onComplete: (data: { 
@@ -27,23 +29,42 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [uploadedTranscript, setUploadedTranscript] = useState<File | null>(null);
-
+  const [programError, setProgramError] = useState('');
+  const [cgpaError, setCgpaError] = useState('');
+  const [jobTypesError, setJobTypesError] = useState('');
+  const [transcriptError, setTranscriptError] = useState('');
+  
   const handleNextFromProgram = () => {
-    if (program.trim()) {
-      setCurrentStep(2);
+    const validation = validateProgram(program);
+    if (!validation.isValid) {
+      setProgramError(validation.error || '');
+      toast.error(validation.error);
+      return;
     }
+    setProgramError('');
+    setCurrentStep(2);
   };
 
   const handleNextFromCgpa = () => {
-    if (cgpa.trim()) {
-      setCurrentStep(3);
+    const validation = validateCGPA(cgpa);
+    if (!validation.isValid) {
+      setCgpaError(validation.error || '');
+      toast.error(validation.error);
+      return;
     }
+    setCgpaError('');
+    setCurrentStep(3);
   };
 
   const handleNextFromJobTypes = () => {
-    if (selectedJobTypes.length > 0) {
-      setCurrentStep(4);
+    const validation = validateSelection(selectedJobTypes, 1, 'job type');
+    if (!validation.isValid) {
+      setJobTypesError(validation.error || '');
+      toast.error(validation.error);
+      return;
     }
+    setJobTypesError('');
+    setCurrentStep(4);
   };
 
   const handleNextFromSkills = () => {
@@ -70,11 +91,15 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
   };
 
   const toggleJobType = (jobType: string) => {
-    setSelectedJobTypes(prev => 
-      prev.includes(jobType) 
-        ? prev.filter(type => type !== jobType)
-        : [...prev, jobType]
-    );
+    const newTypes = selectedJobTypes.includes(jobType)
+      ? selectedJobTypes.filter(type => type !== jobType)
+      : [...selectedJobTypes, jobType];
+    
+    setSelectedJobTypes(newTypes);
+    
+    if (jobTypesError && newTypes.length > 0) {
+      setJobTypesError('');
+    }
   };
 
   const toggleSkill = (skill: string) => {
@@ -96,9 +121,58 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      const validation = validateFile(file, {
+        maxSizeMB: 10,
+        allowedTypes: ['.pdf', '.docx', '.jpeg', '.jpg'],
+        required: false
+      });
+      
+      if (!validation.isValid) {
+        setTranscriptError(validation.error || '');
+        setUploadedTranscript(null);
+        toast.error(validation.error);
+        return;
+      }
+      
       setUploadedTranscript(file);
+      setTranscriptError('');
+      toast.success('Transcript uploaded successfully');
     }
   };
+
+  const handleProgramChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setProgram(value);
+    if (programError && value.trim().length > 0) {
+      setProgramError('');
+    }
+  };
+
+  const handleCgpaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCgpa(value);
+    if (cgpaError && value.trim().length > 0) {
+      setCgpaError('');
+    }
+  };
+
+  // ProgressDots component for showing step progress
+  const ProgressDots = ({ total, current }: { total: number; current: number }) => (
+    <div className="flex justify-center gap-2 mb-8">
+      {Array.from({ length: total }).map((_, index) => (
+        <div
+          key={index}
+          className={`w-2 h-2 rounded-full ${
+            index + 1 === current
+              ? 'bg-blue-600'
+              : index + 1 < current
+              ? 'bg-blue-300'
+              : 'bg-gray-300'
+          }`}
+        />
+      ))}
+    </div>
+  );
 
   const jobTypes = [
     { id: 'software-engineering', title: 'Software Engineering', description: 'Designing, developing, and maintaining software applications and systems.', icon: Laptop },
@@ -116,25 +190,34 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
     'Problem-Solving', 'Critical Thinking', 'Leadership', 'Teamwork',
     'Research', 'Financial Modeling', 'Digital Marketing'
   ];
+          <div className="w-full max-w-md space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">Enter Your Program</label>
+              <Input
+                value={program}
+                onChange={handleProgramChange}
+                placeholder="e.g., Computer Science, Business Administration"
+                className={`w-full ${programError ? 'border-red-500' : ''}`}
+              />
+              {programError && (
+                <div className="flex items-center gap-1 mt-1 text-sm text-red-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{programError}</span>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Minimum 2 characters required
+              </p>
+            </div>
 
-  const personalInterests = [
-    'Technology', 'Arts & Culture', 'Environmentalism', 'Volunteering',
-    'Sports', 'Gaming', 'Reading', 'Travel', 'Cooking', 'Photography',
-    'Music Production'
-  ];
-
-  const ProgressDots = ({ total, current }: { total: number; current: number }) => (
-    <div className="flex justify-center gap-2 mb-8">
-      {Array.from({ length: total }, (_, index) => (
-        <div
-          key={index}
-          className={`w-2 h-2 rounded-full ${
-            index + 1 === current ? 'bg-blue-600' : 'bg-gray-300'
-          }`}
-        />
-      ))}
-    </div>
-  );
+            <Button 
+              onClick={handleNextFromProgram}
+              disabled={!program.trim()}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+            >
+              Next
+            </Button>
+          </div>
 
   if (currentStep === 1) {
     return (
@@ -152,37 +235,42 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
           {/* Illustration */}
           <div className="mb-8">
             <img 
-              src={image_055c3f21905bc477ee2467fbb9eb21c4fb88caef} 
+              src={exampleImage} 
               alt="Students in front of university building"
               className="w-80 h-auto"
             />
           </div>
 
           <ProgressDots total={5} current={1} />
-
-          <h1 className="text-2xl font-bold text-center mb-4">
-            What is your Program of Study?
-          </h1>
-          
-          <p className="text-gray-600 text-center mb-8 max-w-md">
-            Help us understand your academic background to tailor your UniCore experience.
-          </p>
-
           <div className="w-full max-w-md space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Enter Your Program</label>
+            <div className="text-center">
               <Input
-                value={program}
-                onChange={(e) => setProgram(e.target.value)}
-                placeholder="e.g., Computer Science, Business Administration"
-                className="w-full"
+                value={cgpa}
+                onChange={handleCgpaChange}
+                placeholder="3.50"
+                className={`w-32 mx-auto text-center text-lg ${cgpaError ? 'border-red-500' : ''}`}
+                type="number"
+                min="0"
+                max="4"
+                step="0.01"
               />
+              {cgpaError && (
+                <div className="flex items-center justify-center gap-1 mt-2 text-sm text-red-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{cgpaError}</span>
+                </div>
+              )}
             </div>
 
+            <p className="text-gray-600 text-center text-sm">
+              Enter your current Cumulative Grade Point Average.<br />
+              Please use a scale of 0.0 to 4.0.
+            </p>
+
             <Button 
-              onClick={handleNextFromProgram}
-              disabled={!program.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={handleNextFromCgpa}
+              disabled={!cgpa.trim()}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
             >
               Next
             </Button>
@@ -390,11 +478,11 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
               </div>
             </div>
 
-            {/* Personal Interests */}
+            {/* Interests */}
             <div>
-              <h2 className="text-lg font-semibold mb-4">Personal Interests</h2>
+              <h2 className="text-lg font-semibold mb-4">Interests</h2>
               <div className="grid grid-cols-2 gap-3">
-                {personalInterests.map((interest) => {
+                {professionalSkills.map((interest) => {
                   const isSelected = selectedInterests.includes(interest);
                   return (
                     <button
@@ -444,6 +532,7 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
       <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-2xl mx-auto">
         <div className="text-center mb-6">
           <p className="text-sm text-gray-600 mb-2">Step 5 of 5</p>
+          <h2 className="text-lg font-semibold text-gray-800">Transcript Upload</h2>
         </div>
 
         <ProgressDots total={5} current={5} />
@@ -451,14 +540,12 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
         <h1 className="text-2xl font-bold text-center mb-4">
           Upload Your Academic Transcript
         </h1>
-        
-        <p className="text-gray-600 text-center mb-12 max-w-md">
-          Please upload your official academic transcript. This document is crucial for verifying your academic achievements and helping us tailor your UniConnect experience.
-        </p>
 
         {/* File Upload Area */}
         <div className="w-full max-w-md mb-8">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-gray-400 transition-colors">
+          <div className={`border-2 border-dashed rounded-lg p-12 text-center hover:border-gray-400 transition-colors ${
+            transcriptError ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          }`}>
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-2">
               Drag and drop your transcript here, or click to browse.
@@ -481,31 +568,33 @@ export function OnboardingFlow({ onComplete, onCancel }: OnboardingFlowProps) {
             </label>
           </div>
           
-          {uploadedTranscript && (
+          {uploadedTranscript && !transcriptError && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-700">
                 ✓ {uploadedTranscript.name} uploaded successfully
               </p>
+              <p className="text-xs text-gray-500 mt-1">
+                ({(uploadedTranscript.size / 1024 / 1024).toFixed(2)} MB)
+              </p>
+            </div>
+          )}
+          
+          {transcriptError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center justify-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600" />
+                <p className="text-sm text-red-700">{transcriptError}</p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 w-full max-w-md">
-          <Button 
-            variant="outline"
-            onClick={handleBack}
-            className="flex-1"
-          >
-            Back
-          </Button>
-          <Button 
-            onClick={handleComplete}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Upload Transcript
-          </Button>
-        </div>
+        <Button 
+          onClick={handleComplete}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2"
+        >
+          Complete Setup
+        </Button>
       </div>
 
       {/* Footer */}

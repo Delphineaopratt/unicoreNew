@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -7,10 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 interface JobPostingFormProps {
   onJobAdded?: (job: any) => void;
-  onNavigateToJobListings?: () => void;
 }
 
-export function JobPostingForm({ onJobAdded, onNavigateToJobListings }: JobPostingFormProps) {
+export function JobPostingForm({ onJobAdded }: JobPostingFormProps) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     type: '',
@@ -58,9 +59,7 @@ export function JobPostingForm({ onJobAdded, onNavigateToJobListings }: JobPosti
     });
 
     // Navigate to job listings
-    if (onNavigateToJobListings) {
-      onNavigateToJobListings();
-    }
+    navigate('/employer/job-listings');
   };
 
   const handleCancel = () => {

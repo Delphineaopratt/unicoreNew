@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import exampleImage from 'figma:asset/c8af16ee152d7796e2ddb92f5fc0ed8a307ab59c.png';
 
 interface LandingPageProps {
-  onShowLogin: (userType: 'student' | 'employer' | 'hostel-admin') => void;
-  onShowSignup: (userType: 'student' | 'employer' | 'hostel-admin') => void;
+  onLogin: () => void;
+  onSignup: () => void;
 }
 
-export function LandingPage({ onShowLogin, onShowSignup }: LandingPageProps) {
+export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
   const features = [
     {
       title: "Smart Hostel Booking",
@@ -96,45 +94,12 @@ export function LandingPage({ onShowLogin, onShowSignup }: LandingPageProps) {
           </div>
           
           <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  Choose your role
-                  <ChevronDown size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onShowSignup('student')}>
-                  Student
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onShowSignup('employer')}>
-                  Employer
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onShowSignup('hostel-admin')}>
-                  Hostel Admin
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  Login
-                  <ChevronDown size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onShowLogin('student')}>
-                  Login as Student
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onShowLogin('employer')}>
-                  Login as Employer
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onShowLogin('hostel-admin')}>
-                  Login as Hostel Admin
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button variant="outline" onClick={onLogin}>
+              Login
+            </Button>
+            <Button onClick={onSignup}>
+              Sign Up
+            </Button>
           </div>
         </div>
       </header>

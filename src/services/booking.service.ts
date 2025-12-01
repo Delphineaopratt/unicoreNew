@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Booking } from '../types';
 
-const API_URL = 'http://localhost:5000/api/bookings';
+const API_URL = 'http://localhost:5001/api/bookings';
 
 const api = axios.create({
   baseURL: API_URL,

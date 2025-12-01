@@ -1,12 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-
-interface CandidatesPageProps {
-  onBack: () => void;
-}
 
 interface Candidate {
   id: number;
@@ -16,7 +13,8 @@ interface Candidate {
   imageUrl?: string;
 }
 
-export function CandidatesPage({ onBack }: CandidatesPageProps) {
+export function CandidatesPage() {
+  const navigate = useNavigate();
   const candidates: Candidate[] = [
     {
       id: 1,
@@ -45,7 +43,7 @@ export function CandidatesPage({ onBack }: CandidatesPageProps) {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <button 
-              onClick={onBack} 
+              onClick={() => navigate('/employer/dashboard')} 
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft size={20} />

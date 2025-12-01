@@ -3,14 +3,23 @@ import axios from 'axios';
 import { Hostel, Room } from '../types';
 
 
-const API_URL = 'http://localhost:5000/api/hostels';
+const API_URL = 'http://localhost:5001/api/hostels';
 
 // ✅ Create axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api/hostels',
+  baseURL: 'http://localhost:5001/api/hostels',
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Add token to requests if it exists
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // ✅ Hostel services

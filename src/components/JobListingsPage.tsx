@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, DollarSign, Calendar, Eye, Edit, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -18,13 +19,13 @@ interface Job {
 
 interface JobListingsPageProps {
   jobs: Job[];
-  onBack: () => void;
   onViewJob: (job: Job) => void;
   onEditJob: (job: Job) => void;
   onDeleteJob: (jobId: number) => void;
 }
 
-export function JobListingsPage({ jobs, onBack, onViewJob, onEditJob, onDeleteJob }: JobListingsPageProps) {
+export function JobListingsPage({ jobs, onViewJob, onEditJob, onDeleteJob }: JobListingsPageProps) {
+  const navigate = useNavigate();
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
@@ -41,7 +42,7 @@ export function JobListingsPage({ jobs, onBack, onViewJob, onEditJob, onDeleteJo
   return (
     <div className="max-w-6xl">
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigate('/employer/dashboard')} className="p-2 hover:bg-gray-100 rounded-lg">
           <ArrowLeft size={20} />
         </button>
         <h1>Job Listings</h1>

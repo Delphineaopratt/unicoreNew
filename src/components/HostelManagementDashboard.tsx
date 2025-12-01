@@ -6,6 +6,7 @@ import {
   Upload,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -34,6 +35,7 @@ interface HostelManagementDashboardProps {
   setHostels: (hostels: Hostel[]) => void;
   notifications: HostelNotification[];
   setNotifications: (notifications: HostelNotification[]) => void;
+  onLogout?: () => void;
 }
 
 export function HostelManagementDashboard({
@@ -41,6 +43,7 @@ export function HostelManagementDashboard({
   setHostels,
   notifications,
   setNotifications,
+  onLogout,
 }: HostelManagementDashboardProps) {
   const [activeTab, setActiveTab] = useState<
     "add-hostels" | "hostel-listings" | "notifications"
@@ -51,6 +54,7 @@ export function HostelManagementDashboard({
   const [showRoomsView, setShowRoomsView] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('');
 
   // Form states
   const [hostelForm, setHostelForm] = useState({
@@ -72,6 +76,17 @@ export function HostelManagementDashboard({
 
   useEffect(() => {
     fetchHostels();
+    
+    // Get user name from localStorage
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const parsedUser = JSON.parse(user);
+        setUserName(parsedUser.name || 'Admin');
+      } catch (e) {
+        setUserName('Admin');
+      }
+    }
   }, []);
 
   // const fetchHostels = async () => {
@@ -564,10 +579,25 @@ export function HostelManagementDashboard({
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b px-8 py-6">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl font-semibold">
-            Hostel Management Dashboard
-          </h1>
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">
+              Hostel Management Dashboard
+            </h1>
+            {userName && (
+              <p className="text-sm text-gray-600 mt-1">Welcome back, {userName}</p>
+            )}
+          </div>
+          {onLogout && (
+            <Button
+              variant="ghost"
+              onClick={onLogout}
+              className="flex items-center gap-2 text-gray-600 hover:bg-gray-50"
+            >
+              <LogOut size={20} />
+              <span>Logout</span>
+            </Button>
+          )}
         </div>
       </div>
 

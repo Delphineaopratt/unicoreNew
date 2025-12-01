@@ -59,15 +59,24 @@
 
 // src/services/auth.service.ts
 import axios from 'axios';
-const API = axios.create({ baseURL: 'http://localhost:5000/api/auth' });
+const API = axios.create({ baseURL: 'http://localhost:5001/api/auth' });
 
 export const login = async (email: string, password: string) => {
   const res = await API.post('/login', { email, password });
-  // res.data: { success:true, data:{ user:{...}, token } }
-  const { token, user } = res.data.data;
+  // res.data: { success:true, token, user:{...} }
+  const { token, user } = res.data;
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
-  return res.data.data;
+  return res.data;
+};
+
+export const register = async (email: string, password: string, name: string, userType: string) => {
+  const res = await API.post('/register', { email, password, name, userType });
+  // res.data: { success:true, token, user:{...} }
+  const { token, user } = res.data;
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(user));
+  return res.data;
 };
 
 export const logout = () => {
