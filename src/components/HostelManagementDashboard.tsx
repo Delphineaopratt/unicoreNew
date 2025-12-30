@@ -12,7 +12,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+// import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Hostel, Room, Notification as HostelNotification } from "../types";
 import {
   getAllHostels,
@@ -507,7 +507,7 @@ export function HostelManagementDashboard({
           key={hostel._id}
           className="bg-white rounded-lg border overflow-hidden"
         >
-          <div className="relative h-48">
+          {/* <div className="relative h-48">
             {hostel.photos && hostel.photos.length > 0 ? (
               <ImageWithFallback
                 src={hostel.photos[0]}
@@ -519,7 +519,7 @@ export function HostelManagementDashboard({
                 <Building2 className="w-12 h-12 text-gray-400" />
               </div>
             )}
-          </div>
+          </div> */}
           <div className="p-4">
             <h3 className="text-lg font-semibold mb-2">{hostel.name}</h3>
             <p className="text-gray-600 mb-2">{hostel.location}</p>

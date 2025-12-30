@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, BedDouble, Users, Utensils, Car } from 'lucide-react';
 import { Button } from './ui/button';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+// import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BookingConfirmationModal } from './BookingConfirmationModal';
 import { getHostelById } from '../services/hostel.service';
 import { createBooking } from '../services/booking.service';
@@ -235,11 +235,11 @@ export function HostelDetails({ hostelId, onBooking }: HostelDetailsProps) {
             {rooms.map((room) => (
               <div key={room.id} className="bg-white rounded-lg overflow-hidden shadow-sm">
                 <div className="relative">
-                  <ImageWithFallback
+                  {/* <ImageWithFallback
                     src={room.image}
                     alt={room.name}
                     className="w-full h-48 object-cover"
-                  />
+                  /> */}
                   {/* Slide indicators */}
                   <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
                     <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>

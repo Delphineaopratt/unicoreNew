@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+// import { ImageWithFallback } from './figma/ImageWithFallback';
 import { toast } from 'sonner';
 
 interface JobApplication {

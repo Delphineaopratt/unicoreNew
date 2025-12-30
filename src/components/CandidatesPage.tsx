@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+// import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface Candidate {
   id: number;
@@ -67,11 +67,11 @@ export function CandidatesPage() {
                     {/* Left section: Profile + Info */}
                     <div className="flex items-center gap-6">
                       <div className="flex-shrink-0">
-                        <ImageWithFallback
+                        {/* <ImageWithFallback
                           src={candidate.imageUrl || "https://images.unsplash.com/photo-1652471949169-9c587e8898cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB3b21hbiUyMGhlYWRzaG90fGVufDF8fHx8MTc1NzkxODIyMXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"}
                           alt={candidate.name}
                           className="w-16 h-16 rounded-full object-cover border-2 border-gray-100"
-                        />
+                        /> */}
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">{candidate.name}</h3>

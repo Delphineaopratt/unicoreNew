@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { StatusBadge } from './StatusBadge';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+// import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface CandidateCardProps {
   name: string;
@@ -31,11 +31,11 @@ export function CandidateCard({
   return (
     <div className="bg-white border border-border rounded-lg p-6 flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <ImageWithFallback
+        {/* <ImageWithFallback
           src={imageUrl}
           alt={name}
           className="w-12 h-12 rounded-full object-cover"
-        />
+        /> */}
         <div>
           <h3 className="font-medium">{name}</h3>
           <p className="text-gray-600 text-sm">Applied for: {position}</p>

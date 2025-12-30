@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+// import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Calendar, CreditCard, AlertCircle } from 'lucide-react';
 import { validateDateRange, validateFutureDate, validateTermsAcceptance } from '../utils/validation';
 import { toast } from 'sonner';
@@ -149,11 +149,11 @@ export function BookingConfirmationModal({
         <div className="space-y-6">
           {/* Room Summary */}
           <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
-            <ImageWithFallback
+            {/* <ImageWithFallback
               src={room.image}
               alt={room.name}
               className="w-24 h-24 object-cover rounded-lg"
-            />
+            /> */}
             <div className="flex-1">
               <h3 className="font-semibold text-lg">{room.name}</h3>
               <p className="text-sm text-gray-600">{hostelName}</p>

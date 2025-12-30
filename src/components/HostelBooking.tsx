@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+// import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Hostel, Booking, Notification } from "../types";
 import { getAllHostels } from "../services/hostel.service";
 import { getMyBookings, createBooking } from "../services/booking.service";
@@ -234,11 +234,11 @@ export function HostelBooking() {
                   className="bg-white rounded-lg overflow-hidden shadow-sm"
                 >
                   <div className="relative">
-                    <ImageWithFallback
+                    {/* <ImageWithFallback
                       src={hostel.photos[0] || "/placeholder-hostel.jpg"}
                       alt={hostel.name}
                       className="w-full h-48 object-cover"
-                    />
+                    /> */}
                   </div>
 
                   <div className="p-4">
@@ -300,14 +300,14 @@ export function HostelBooking() {
                     className="bg-white rounded-lg p-4 shadow-sm border"
                   >
                     <div className="flex gap-4">
-                      <ImageWithFallback
+                      {/* <ImageWithFallback
                         src={
                           (booking.hostel as Hostel).photos[0] ||
                           "/placeholder-hostel.jpg"
                         }
                         alt={(booking.hostel as Hostel).name}
                         className="w-20 h-20 object-cover rounded-lg"
-                      />
+                      /> */}
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
                           <div>
