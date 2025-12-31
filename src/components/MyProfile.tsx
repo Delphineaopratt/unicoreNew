@@ -130,7 +130,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
             <h1 className="text-2xl mb-4">Complete Your Profile</h1>
-            <p className="text-gray-600 mb-6">Please complete the onboarding process first to set up your profile.</p>
+            <p className="text-gray-600 mb-6">Personalize your job feed under Jobs & Internships and complete the onboarding process to set up your profile.</p>
           </div>
         </div>
       </div>

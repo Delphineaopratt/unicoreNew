@@ -51,6 +51,31 @@ export const uploadTranscript = async (file: File) => {
   return response.data;
 };
 
+export const completeOnboarding = async (onboardingData: {
+  program: string;
+  cgpa: string;
+  jobTypes: string[];
+  skills: string[];
+  interests: string[];
+  transcript: File | null;
+}) => {
+  const formData = new FormData();
+  formData.append('program', onboardingData.program);
+  formData.append('cgpa', onboardingData.cgpa);
+  formData.append('skills', JSON.stringify(onboardingData.skills));
+  formData.append('interests', JSON.stringify(onboardingData.interests));
+  if (onboardingData.transcript) {
+    formData.append('transcript', onboardingData.transcript);
+  }
+
+  const response = await api.post('/auth/complete-onboarding', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 export const getEmployers = async () => {
   const response = await api.get('/users/employers');
   return response.data;
