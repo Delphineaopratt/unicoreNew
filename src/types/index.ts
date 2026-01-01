@@ -23,6 +23,21 @@ export interface User {
   createdAt: string;
 }
 
+export interface UserProfile {
+  program?: string;
+  cgpa?: string;
+  jobTypes?: string[];
+  skills?: string[];
+  interests?: string[];
+  transcript?: File | { url?: string; filename?: string; } | null;
+  name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  bio?: string;
+  profilePicture?: string;
+}
+
 // Hostel types
 export interface Room {
   _id: string;

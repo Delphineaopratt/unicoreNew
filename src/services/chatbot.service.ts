@@ -68,6 +68,7 @@
 // };
 
 import axios from 'axios';
+import { UserProfile } from '../types/index';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -103,21 +104,6 @@ api.interceptors.response.use(
 );
 
 // -------------------- Interfaces -------------------- //
-
-export interface UserProfile {
-  program?: string;
-  cgpa?: string;
-  jobTypes?: string[];
-  skills?: string[];
-  interests?: string[];
-  transcript?: File | null;
-  name?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  bio?: string;
-  profilePicture?: string;
-}
 
 export interface ChatMessage {
   id: string;

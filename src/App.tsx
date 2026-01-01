@@ -81,7 +81,13 @@ interface UserProfile {
   jobTypes: string[];
   skills: string[];
   interests: string[];
-  transcript: File | null;
+  transcript:
+    | File
+    | {
+        url?: string;
+        filename?: string;
+      }
+    | null;
   name?: string;
   email?: string;
   phone?: string;
@@ -256,15 +262,16 @@ export default function App() {
       if (isAuthenticated) {
         try {
           const { getCurrentUser } = await import("./services/user.service");
-          const userData = await getCurrentUser();
-          if (userData) {
+          const response = await getCurrentUser();
+          if (response && response.data) {
+            const userData = response.data;
             setUserProfile({
               program: userData.program || "",
               cgpa: userData.cgpa || "",
-              jobTypes: [], // This might need to be fetched separately or stored differently
+              jobTypes: userData.jobTypes || [],
               skills: userData.skills || [],
               interests: userData.interests || [],
-              transcript: null, // File objects can't be persisted, so this will be null
+              transcript: userData.transcript || null,
               name: userData.name,
               email: userData.email,
               phone: userData.phone,
@@ -451,7 +458,28 @@ export default function App() {
       console.log("Onboarding completed:", data);
       const { completeOnboarding } = await import("./services/user.service");
       await completeOnboarding(data);
-      setUserProfile(data);
+
+      // Re-fetch user profile to get updated data from server
+      const { getCurrentUser } = await import("./services/user.service");
+      const response = await getCurrentUser();
+      if (response && response.data) {
+        const userData = response.data;
+        setUserProfile({
+          program: userData.program || "",
+          cgpa: userData.cgpa || "",
+          jobTypes: userData.jobTypes || [],
+          skills: userData.skills || [],
+          interests: userData.interests || [],
+          transcript: userData.transcript || null,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          location: userData.location,
+          bio: userData.bio,
+          profilePicture: userData.profilePicture,
+        });
+      }
+
       setIsOnboardingActive(false);
       setShowProfileUpdatedModal(true);
 

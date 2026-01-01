@@ -15,7 +15,7 @@ interface UserProfile {
   jobTypes: string[];
   skills: string[];
   interests: string[];
-  transcript: File | null;
+  transcript: File | { url?: string; filename?: string; } | null;
   name?: string;
   email?: string;
   phone?: string;
@@ -42,6 +42,14 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
     }
   );
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
+
+  const getTranscriptName = (transcript: File | { url?: string; filename?: string; } | null) => {
+    if (!transcript) return null;
+    if (transcript instanceof File) {
+      return transcript.name;
+    }
+    return transcript.filename || null;
+  };
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -297,13 +305,13 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                         Browse Files
                       </label>
                       {editedProfile.transcript && (
-                        <p className="text-sm text-green-600 mt-2">✓ {editedProfile.transcript.name}</p>
+                        <p className="text-sm text-green-600 mt-2">✓ {getTranscriptName(editedProfile.transcript)}</p>
                       )}
                     </div>
                   ) : (
                     <div className="p-3 bg-gray-50 rounded-lg">
                       {userProfile.transcript ? (
-                        <p className="text-sm">✓ Transcript uploaded: {userProfile.transcript.name}</p>
+                        <p className="text-sm">✓ Transcript uploaded: {getTranscriptName(userProfile.transcript)}</p>
                       ) : (
                         <p className="text-sm text-gray-500">No transcript uploaded</p>
                       )}

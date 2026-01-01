@@ -1,17 +1,10 @@
 import axios from 'axios';
-import { User, UserProfile } from '../types';
+import { UserProfile } from '../types/index';
 
-const API_URL = 'http://localhost:5001/api';
+const API = axios.create({ baseURL: 'http://localhost:5001/api' });
 
-// Create axios instance with token interceptor
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-api.interceptors.request.use((config) => {
+// Add token to requests if it exists
+API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -20,19 +13,19 @@ api.interceptors.request.use((config) => {
 });
 
 export const getCurrentUser = async () => {
-  const response = await api.get('/users/me');
+  const response = await API.get('/auth/me');
   return response.data;
 };
 
 export const updateProfile = async (profileData: Partial<UserProfile>) => {
-  const response = await api.put('/users/me/profile', profileData);
+  const response = await API.put('/auth/updateprofile', profileData);
   return response.data;
 };
 
 export const uploadProfilePicture = async (file: File) => {
   const formData = new FormData();
   formData.append('image', file);
-  const response = await api.post('/users/me/profile-picture', formData, {
+  const response = await API.post('/users/me/profile-picture', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -43,7 +36,7 @@ export const uploadProfilePicture = async (file: File) => {
 export const uploadTranscript = async (file: File) => {
   const formData = new FormData();
   formData.append('transcript', file);
-  const response = await api.post('/users/me/transcript', formData, {
+  const response = await API.post('/auth/upload-transcript', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -62,31 +55,17 @@ export const completeOnboarding = async (onboardingData: {
   const formData = new FormData();
   formData.append('program', onboardingData.program);
   formData.append('cgpa', onboardingData.cgpa);
+  formData.append('jobTypes', JSON.stringify(onboardingData.jobTypes));
   formData.append('skills', JSON.stringify(onboardingData.skills));
   formData.append('interests', JSON.stringify(onboardingData.interests));
   if (onboardingData.transcript) {
     formData.append('transcript', onboardingData.transcript);
   }
 
-  const response = await api.post('/auth/complete-onboarding', formData, {
+  const response = await API.post('/auth/complete-onboarding', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
   });
-  return response.data;
-};
-
-export const getEmployers = async () => {
-  const response = await api.get('/users/employers');
-  return response.data;
-};
-
-export const getStudents = async () => {
-  const response = await api.get('/users/students');
-  return response.data;
-};
-
-export const getHostelAdmins = async () => {
-  const response = await api.get('/users/hostel-admins');
   return response.data;
 };
