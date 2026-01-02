@@ -40,13 +40,13 @@ export const updateJob = async (id: string, jobData: Partial<Job>) => {
   return response.data;
 };
 
-export const deleteJob = async (id: string) => {
-  const response = await api.delete(`/jobs/${id}`);
+export const getMyJobs = async () => {
+  const response = await api.get('/jobs/my-jobs');
   return response.data;
 };
 
 // Job application services
-export const applyForJob = async (jobId: string, applicationData: Partial<JobApplication>) => {
+export const applyForJob = async (jobId: string, applicationData: FormData | Partial<JobApplication>) => {
   const response = await api.post(`/jobs/${jobId}/apply`, applicationData);
   return response.data;
 };
@@ -66,7 +66,12 @@ export const getApplicationById = async (id: string) => {
   return response.data;
 };
 
-export const updateApplicationStatus = async (id: string, status: JobApplication['status']) => {
+export const updateApplicationStatus = async (id: string, status: string) => {
   const response = await api.put(`/applications/${id}/status`, { status });
+  return response.data;
+};
+
+export const getEmployerApplications = async () => {
+  const response = await api.get('/jobs/applications/employer');
   return response.data;
 };

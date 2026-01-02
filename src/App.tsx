@@ -24,6 +24,7 @@ import { Toaster } from "./components/ui/sonner";
 interface Job {
   id: number;
   title: string;
+  company: string;
   type: string;
   location: string;
   minSalary: string;
@@ -294,18 +295,96 @@ export default function App() {
     fetchUserProfile();
   }, [isAuthenticated, userType]);
 
-  // Handlers
-  const handleJobAdded = (job: Omit<Job, "id" | "applications">) => {
-    const newJob: Job = {
-      ...job,
-      id: Date.now(),
-      applications: 0,
+  // Fetch jobs for employers
+  useEffect(() => {
+    const fetchEmployerJobs = async () => {
+      if (isAuthenticated && userType === "employer") {
+        try {
+          const response = await fetch("http://localhost:5001/api/jobs", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              // Transform API response to match component interface
+              const transformedJobs = result.data.map((job: any) => ({
+                id: job._id,
+                title: job.title,
+                company: job.company,
+                location: job.location,
+                type: job.type,
+                minSalary: job.salary?.min?.toString() || "0",
+                maxSalary: job.salary?.max?.toString() || "0",
+                description: job.description,
+                requirements: Array.isArray(job.requirements)
+                  ? job.requirements.join(", ")
+                  : job.requirements || "",
+                deadline: job.applicationDeadline
+                  ? new Date(job.applicationDeadline).toLocaleDateString()
+                  : "Not set",
+                applications: job.applicationsCount || 0,
+                status: job.status || "active",
+              }));
+              setJobs(transformedJobs);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching employer jobs:", error);
+        }
+      }
     };
+
+    fetchEmployerJobs();
+  }, [isAuthenticated, userType]);
+
+  // Handlers
+  const handleJobAdded = (job: any) => {
+    // Transform the newly created job to match the component interface
+    const newJob: Job = {
+      id: job._id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      type: job.type,
+      minSalary: job.salary?.min?.toString() || "0",
+      maxSalary: job.salary?.max?.toString() || "0",
+      description: job.description,
+      requirements: Array.isArray(job.requirements)
+        ? job.requirements.join(", ")
+        : job.requirements || "",
+      deadline: job.applicationDeadline
+        ? new Date(job.applicationDeadline).toLocaleDateString()
+        : "Not set",
+      applications: job.applicationsCount || 0,
+      status: job.status || "active",
+    };
+
+    // Add the new job to the local state so it appears immediately
     setJobs((prev) => [...prev, newJob]);
   };
 
-  const handleDeleteJob = (jobId: number) => {
-    setJobs((prev) => prev.filter((job) => job.id !== jobId));
+  const handleDeleteJob = async (jobId: number) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/jobs/${jobId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setJobs((prev) => prev.filter((job) => job.id !== jobId));
+        console.log("Job deleted successfully");
+      } else {
+        console.error("Failed to delete job");
+      }
+    } catch (error) {
+      console.error("Error deleting job:", error);
+    }
   };
 
   const handleViewJob = (job: Job) => {
@@ -340,12 +419,15 @@ export default function App() {
       setIsAuthenticated(true);
       setUserType(credentials.userType);
 
+      // Fetch user-specific data after login
       if (credentials.userType === "student") {
+        await fetchStudentData();
         navigate("/student/dashboard");
-      } else if (credentials.userType === "hostel-admin") {
-        navigate("/hostel/dashboard");
-      } else {
+      } else if (credentials.userType === "employer") {
+        await fetchEmployerData();
         navigate("/employer/dashboard");
+      } else {
+        navigate("/hostel/dashboard");
       }
     } catch (error: any) {
       console.error("Login failed:", error);
@@ -430,18 +512,90 @@ export default function App() {
     setHostelNotifications((prev) => [...prev, hostelNotification]);
   };
 
-  const handleJobApplication = (application: JobApplication) => {
-    setJobApplications((prev) => [...prev, application]);
+  const fetchStudentData = async () => {
+    try {
+      const { getMyApplications } = await import("./services/job.service");
+      const applicationsResponse = await getMyApplications();
+      if (applicationsResponse.success) {
+        // Transform backend data to match frontend interface
+        const transformedApplications = applicationsResponse.data.map(
+          (app: any) => ({
+            id: app._id,
+            jobTitle: app.job?.title || "Unknown Job",
+            company: app.job?.company || "Unknown Company",
+            appliedDate: new Date(app.createdAt).toLocaleDateString(),
+            status: app.status,
+          })
+        );
+        setJobApplications(transformedApplications);
+      }
+    } catch (error) {
+      console.error("Error fetching student applications:", error);
+    }
+  };
 
-    const notification: JobNotification = {
-      id: Date.now().toString(),
-      title: "Application Submitted",
-      message: `Your application for ${application.jobTitle} at ${application.company} has been submitted successfully.`,
-      date: new Date().toISOString(),
-      type: "application",
-      read: false,
-    };
-    setJobNotifications((prev) => [...prev, notification]);
+  const fetchEmployerData = async () => {
+    try {
+      // Fetch employer's jobs if needed
+      const { getMyJobs } = await import("./services/job.service");
+      const jobsResponse = await getMyJobs();
+      if (jobsResponse.success) {
+        setJobs(jobsResponse.data);
+      }
+    } catch (error) {
+      console.error("Error fetching employer data:", error);
+    }
+  };
+
+  const handleJobApplication = async (application: JobApplication) => {
+    try {
+      // Submit application to backend
+      const { applyForJob } = await import("./services/job.service");
+
+      // Prepare form data for file upload
+      const formData = new FormData();
+      formData.append("coverLetter", application.coverLetter);
+      formData.append("address", application.address);
+      if (application.resume) {
+        formData.append("resume", application.resume);
+      }
+
+      const response = await applyForJob(
+        selectedJobForApplication.id.toString(),
+        formData
+      );
+
+      if (response.success) {
+        // Add to local state
+        const newApplication = {
+          id: response.data._id,
+          jobTitle: selectedJobForApplication.title,
+          company: selectedJobForApplication.company,
+          appliedDate: new Date(response.data.createdAt).toLocaleDateString(),
+          status: response.data.status,
+        };
+        setJobApplications((prev) => [...prev, newApplication]);
+
+        // Create notification
+        const notification: JobNotification = {
+          id: Date.now().toString(),
+          title: "Application Submitted",
+          message: `Your application for ${selectedJobForApplication.title} at ${selectedJobForApplication.company} has been submitted successfully.`,
+          date: new Date().toISOString(),
+          type: "application",
+          read: false,
+        };
+        setJobNotifications((prev) => [...prev, notification]);
+
+        toast.success("Application submitted successfully!");
+        navigate("/student/jobs");
+      }
+    } catch (error: any) {
+      console.error("Error submitting application:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to submit application"
+      );
+    }
   };
 
   const handleApplyToJob = (job: Job) => {
@@ -649,6 +803,8 @@ export default function App() {
                       <JobsPage
                         onApplyToJob={handleApplyToJob}
                         onStartOnboarding={handleStartOnboarding}
+                        applications={jobApplications}
+                        jobNotifications={jobNotifications}
                       />
                     }
                   />

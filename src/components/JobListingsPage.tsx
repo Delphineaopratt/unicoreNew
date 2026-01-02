@@ -50,7 +50,7 @@ export function JobListingsPage({ jobs, onViewJob, onEditJob, onDeleteJob }: Job
       
       {jobs.length === 0 ? (
         <div className="bg-white rounded-lg border border-border p-8 text-center">
-          <p className="text-gray-600">No job listings yet. Go to Dashboard to create your first job listing.</p>
+          <p className="text-gray-600">No job listings yet. Go to Dashboard to add a job.</p>
         </div>
       ) : (
         <div className="space-y-4">
