@@ -340,6 +340,52 @@ export default function App() {
     fetchEmployerJobs();
   }, [isAuthenticated, userType]);
 
+  // Fetch student applications and notifications
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      if (isAuthenticated && userType === "student") {
+        try {
+          // Fetch applications
+          const { getMyApplications } = await import("./services/job.service");
+          const applicationsResponse = await getMyApplications();
+          if (applicationsResponse.success) {
+            const transformedApplications = applicationsResponse.data.map(
+              (app: any) => ({
+                id: app._id,
+                jobTitle: app.job.title,
+                company: app.job.company,
+                appliedDate: new Date(app.createdAt).toLocaleDateString(),
+                status: app.status,
+              })
+            );
+            setJobApplications(transformedApplications);
+          }
+
+          // Fetch notifications
+          const { getNotifications } = await import("./services/job.service");
+          const notificationsResponse = await getNotifications();
+          if (notificationsResponse.success) {
+            const transformedNotifications = notificationsResponse.data.map(
+              (notif: any) => ({
+                id: notif._id,
+                title: notif.title,
+                message: notif.message,
+                date: new Date(notif.createdAt).toISOString(),
+                type: notif.type,
+                read: notif.read,
+              })
+            );
+            setJobNotifications(transformedNotifications);
+          }
+        } catch (error) {
+          console.error("Error fetching student data:", error);
+        }
+      }
+    };
+
+    fetchStudentData();
+  }, [isAuthenticated, userType]);
+
   // Handlers
   const handleJobAdded = (job: any) => {
     // Transform the newly created job to match the component interface
@@ -544,57 +590,6 @@ export default function App() {
       }
     } catch (error) {
       console.error("Error fetching employer data:", error);
-    }
-  };
-
-  const handleJobApplication = async (application: JobApplication) => {
-    try {
-      // Submit application to backend
-      const { applyForJob } = await import("./services/job.service");
-
-      // Prepare form data for file upload
-      const formData = new FormData();
-      formData.append("coverLetter", application.coverLetter);
-      formData.append("address", application.address);
-      if (application.resume) {
-        formData.append("resume", application.resume);
-      }
-
-      const response = await applyForJob(
-        selectedJobForApplication.id.toString(),
-        formData
-      );
-
-      if (response.success) {
-        // Add to local state
-        const newApplication = {
-          id: response.data._id,
-          jobTitle: selectedJobForApplication.title,
-          company: selectedJobForApplication.company,
-          appliedDate: new Date(response.data.createdAt).toLocaleDateString(),
-          status: response.data.status,
-        };
-        setJobApplications((prev) => [...prev, newApplication]);
-
-        // Create notification
-        const notification: JobNotification = {
-          id: Date.now().toString(),
-          title: "Application Submitted",
-          message: `Your application for ${selectedJobForApplication.title} at ${selectedJobForApplication.company} has been submitted successfully.`,
-          date: new Date().toISOString(),
-          type: "application",
-          read: false,
-        };
-        setJobNotifications((prev) => [...prev, notification]);
-
-        toast.success("Application submitted successfully!");
-        navigate("/student/jobs");
-      }
-    } catch (error: any) {
-      console.error("Error submitting application:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to submit application"
-      );
     }
   };
 
@@ -803,18 +798,13 @@ export default function App() {
                       <JobsPage
                         onApplyToJob={handleApplyToJob}
                         onStartOnboarding={handleStartOnboarding}
-                        applications={jobApplications}
-                        jobNotifications={jobNotifications}
                       />
                     }
                   />
                   <Route
                     path="job-application"
                     element={
-                      <JobApplicationForm
-                        job={selectedJobForApplication}
-                        onSubmit={handleJobApplication}
-                      />
+                      <JobApplicationForm job={selectedJobForApplication} />
                     }
                   />
                   <Route path="chat" element={<UnibotChat />} />

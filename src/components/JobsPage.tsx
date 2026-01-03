@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { toast } from "sonner";
 import { OnboardingFlow } from "./OnboardingFlow";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface JobApplication {
   id: string;
@@ -36,20 +36,18 @@ interface Job {
 
 interface JobsPageProps {
   onStartOnboarding?: () => void;
-  applications?: JobApplication[];
-  jobNotifications?: JobNotification[];
   onApplyToJob: (job: Job) => void;
 }
 
-export function JobsPage({
-  onStartOnboarding,
-  applications = [],
-  jobNotifications = [],
-  onApplyToJob,
-}: JobsPageProps) {
+export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
   const [activeTab, setActiveTab] = useState("featured");
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [jobNotifications, setJobNotifications] = useState<JobNotification[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   // Fetch jobs from API
   useEffect(() => {
@@ -86,6 +84,66 @@ export function JobsPage({
 
     fetchJobs();
   }, []);
+
+  // Fetch applications and notifications
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      // Check if we need to refresh data
+      const shouldRefresh = localStorage.getItem("refreshJobData") === "true";
+      if (shouldRefresh) {
+        localStorage.removeItem("refreshJobData");
+      }
+
+      try {
+        const { getMyApplications, getNotifications } = await import(
+          "../services/job.service"
+        );
+
+        // Fetch applications
+        const applicationsResponse = await getMyApplications();
+        if (applicationsResponse.success) {
+          const transformedApplications = applicationsResponse.data.map(
+            (app: any) => ({
+              id: app._id,
+              jobTitle: app.job.title,
+              company: app.job.company,
+              appliedDate: new Date(app.createdAt).toLocaleDateString(),
+              status: app.status,
+            })
+          );
+          setApplications(transformedApplications);
+        }
+
+        // Fetch notifications
+        const notificationsResponse = await getNotifications();
+        if (notificationsResponse.success) {
+          const transformedNotifications = notificationsResponse.data.map(
+            (notif: any) => ({
+              id: notif._id,
+              title: notif.title,
+              message: notif.message,
+              date: new Date(notif.createdAt).toISOString(),
+              type: notif.type,
+              read: notif.read,
+            })
+          );
+          setJobNotifications(transformedNotifications);
+        }
+      } catch (error) {
+        console.error("Error fetching student data:", error);
+        toast.error("Failed to load your applications and notifications");
+      }
+    };
+
+    fetchStudentData();
+  }, [location]);
+
+  // Check for navigation state to set active tab
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   const handleApplyNow = (job: Job) => {
     onApplyToJob(job);
@@ -126,15 +184,36 @@ export function JobsPage({
             </TabsTrigger>
             <TabsTrigger
               value="history"
-              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white relative"
             >
               History
+              {applications.filter(
+                (app) =>
+                  new Date().getTime() - new Date(app.appliedDate).getTime() <
+                  3600000
+              ).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {
+                    applications.filter(
+                      (app) =>
+                        new Date().getTime() -
+                          new Date(app.appliedDate).getTime() <
+                        3600000
+                    ).length
+                  }
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger
               value="notifications"
-              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+              className="data-[state=active]:bg-blue-600 data-[state=active]:text-white relative"
             >
               Notifications
+              {jobNotifications.filter((n) => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {jobNotifications.filter((n) => !n.read).length}
+                </span>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -195,43 +274,57 @@ export function JobsPage({
               </div>
             ) : (
               <div className="space-y-4">
-                {applications.map((application) => (
-                  <div
-                    key={application.id}
-                    className="bg-white border rounded-lg p-4 shadow-sm"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold">
-                          {application.jobTitle}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {application.company}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Applied on{" "}
-                          {new Date(
-                            application.appliedDate
-                          ).toLocaleDateString()}
-                        </p>
+                {applications.map((application) => {
+                  const isNewApplication =
+                    new Date().getTime() -
+                      new Date(application.appliedDate).getTime() <
+                    3600000; // Within last hour
+
+                  return (
+                    <div
+                      key={application.id}
+                      className="bg-white border rounded-lg p-4 shadow-sm"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold">
+                              {application.jobTitle}
+                            </h3>
+                            {isNewApplication && (
+                              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                New
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {application.company}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Applied on{" "}
+                            {new Date(
+                              application.appliedDate
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            application.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : application.status === "reviewed"
+                              ? "bg-blue-100 text-blue-800"
+                              : application.status === "accepted"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {application.status.charAt(0).toUpperCase() +
+                            application.status.slice(1)}
+                        </span>
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          application.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : application.status === "reviewed"
-                            ? "bg-blue-100 text-blue-800"
-                            : application.status === "accepted"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {application.status.charAt(0).toUpperCase() +
-                          application.status.slice(1)}
-                      </span>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -247,7 +340,11 @@ export function JobsPage({
                 {jobNotifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className="bg-white border rounded-lg p-4 shadow-sm"
+                    className={`border rounded-lg p-4 shadow-sm ${
+                      notification.read
+                        ? "bg-white border-gray-200"
+                        : "bg-blue-50 border-blue-200"
+                    }`}
                   >
                     <div className="flex gap-3">
                       <div
@@ -259,6 +356,9 @@ export function JobsPage({
                             : "bg-purple-500"
                         }`}
                       />
+                      {!notification.read && (
+                        <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0" />
+                      )}
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-1">
                           <h3 className="font-semibold">

@@ -63,10 +63,9 @@ interface JobApplication {
 
 interface JobApplicationFormProps {
   job: Job | null;
-  onSubmit: (application: JobApplication) => void;
 }
 
-export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
+export function JobApplicationForm({ job }: JobApplicationFormProps) {
   const navigate = useNavigate();
   const [address, setAddress] = useState("");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -77,6 +76,15 @@ export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
   const [addressError, setAddressError] = useState("");
   const [resumeError, setResumeError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");
+
+  // Form validation state
+  const isFormValid =
+    address.trim().length >= 10 &&
+    resume !== null &&
+    !resumeError &&
+    coverLetter.trim().length >= 100 &&
+    !addressError &&
+    !coverLetterError;
 
   // Load user profile on component mount
   useEffect(() => {
@@ -140,6 +148,13 @@ export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
     if (addressError && value.trim().length > 0) {
       setAddressError("");
     }
+
+    // Check minimum length
+    if (value.trim().length > 0 && value.trim().length < 10) {
+      setAddressError("Address must be at least 10 characters");
+    } else if (value.trim().length >= 10) {
+      setAddressError("");
+    }
   };
 
   const handleCoverLetterChange = (
@@ -150,6 +165,15 @@ export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
 
     // Clear error when user starts typing
     if (coverLetterError && value.trim().length > 0) {
+      setCoverLetterError("");
+    }
+
+    // Check minimum length
+    if (value.trim().length > 0 && value.trim().length < 100) {
+      setCoverLetterError(
+        "Cover letter should be at least 100 characters (recommended 300-500 words)"
+      );
+    } else if (value.trim().length >= 100) {
       setCoverLetterError("");
     }
   };
@@ -188,39 +212,38 @@ export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
     }
 
     if (hasErrors) {
-      const isFormValid = () => {
-        return (
-          address.trim() !== "" &&
-          resume !== null &&
-          coverLetter.trim().length >= 100 &&
-          !addressError &&
-          !resumeError &&
-          !coverLetterError
-        );
-      };
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const application: JobApplication = {
-        id: Date.now().toString(),
-        jobTitle: job.title,
-        company: job.company,
-        appliedDate: new Date().toISOString(),
-        status: "pending",
-        address,
-        resume,
-        coverLetter,
-      };
+      // Prepare form data for file upload
+      const { applyForJob } = await import("../services/job.service");
 
-      onSubmit(application);
-      setShowSuccessModal(true);
-      toast.success("Application submitted successfully!");
-    } catch (error) {
+      const formData = new FormData();
+      formData.append("coverLetter", coverLetter);
+      formData.append("address", address);
+      if (resume) {
+        formData.append("resume", resume);
+      }
+
+      const response = await applyForJob(job.id.toString(), formData);
+
+      if (response.success) {
+        // Set flag to refresh data in JobsPage
+        localStorage.setItem("refreshJobData", "true");
+        setShowSuccessModal(true);
+        toast.success("Application submitted successfully!");
+      } else {
+        toast.error(response.message || "Failed to submit application");
+      }
+    } catch (error: any) {
       console.error("Error submitting application:", error);
-      toast.error("Failed to submit application. Please try again.");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to submit application. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -228,7 +251,7 @@ export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
 
   const handleSuccessModalClose = () => {
     setShowSuccessModal(false);
-    navigate("/student/jobs");
+    navigate("/student/jobs", { state: { activeTab: "history" } });
   };
 
   const getInitials = (name?: string) => {
@@ -249,9 +272,6 @@ export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
     }
     return transcript.filename || null;
   };
-
-  const isFormValid =
-    address.trim() !== "" && resume !== null && coverLetter.trim() !== "";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -640,8 +660,9 @@ export function JobApplicationForm({ job, onSubmit }: JobApplicationFormProps) {
               Your application for{" "}
               <span className="font-medium">{job.title}</span> at{" "}
               <span className="font-medium">{job.company}</span> has been
-              submitted successfully. You will receive updates on your
-              application status via email and notifications.
+              submitted successfully. You can view your application status in
+              the "Application History" tab and receive updates via the
+              "Notifications" tab.
             </DialogDescription>
           </DialogHeader>
 

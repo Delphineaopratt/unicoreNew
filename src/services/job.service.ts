@@ -16,6 +16,12 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Don't set Content-Type for FormData requests
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+  
   return config;
 });
 
@@ -73,5 +79,27 @@ export const updateApplicationStatus = async (id: string, status: string) => {
 
 export const getEmployerApplications = async () => {
   const response = await api.get('/jobs/applications/employer');
+  return response.data;
+};
+
+// Notification services
+export const getNotifications = async () => {
+  const response = await api.get('/jobs/notifications');
+  return response.data;
+};
+
+export const markNotificationAsRead = async (id: string) => {
+  const response = await api.put(`/jobs/notifications/${id}/read`);
+  return response.data;
+};
+
+export const createNotification = async (notificationData: {
+  title: string;
+  message: string;
+  type: string;
+  relatedApplication?: string;
+  relatedJob?: string;
+}) => {
+  const response = await api.post('/jobs/notifications', notificationData);
   return response.data;
 };
