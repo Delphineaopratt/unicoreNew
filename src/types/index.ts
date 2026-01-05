@@ -42,6 +42,7 @@ export interface UserProfile {
 export interface Room {
   _id: string;
   name: string;
+  type: string;
   amenities: string[];
   price: number;
   availableRooms: number;

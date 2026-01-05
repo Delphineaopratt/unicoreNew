@@ -12,6 +12,15 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 // import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Hostel, Room, Notification as HostelNotification } from "../types";
 import {
@@ -54,7 +63,8 @@ export function HostelManagementDashboard({
   const [showRoomsView, setShowRoomsView] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("");
 
   // Form states
   const [hostelForm, setHostelForm] = useState({
@@ -67,6 +77,7 @@ export function HostelManagementDashboard({
 
   const [roomForm, setRoomForm] = useState({
     name: "",
+    type: "",
     amenities: "",
     price: "",
     availableRooms: 0,
@@ -76,32 +87,24 @@ export function HostelManagementDashboard({
 
   useEffect(() => {
     fetchHostels();
-    
+
     // Get user name from localStorage
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem("user");
     if (user) {
       try {
         const parsedUser = JSON.parse(user);
-        setUserName(parsedUser.name || 'Admin');
+        setUserName(parsedUser.name || "Admin");
       } catch (e) {
-        setUserName('Admin');
+        setUserName("Admin");
       }
     }
   }, []);
 
-  // const fetchHostels = async () => {
-  //   try {
-  //     setIsLoading(true);
-  //     const fetchedHostels = await getAllHostels();
-  //     setHostels(fetchedHostels);
-  //     setError(null);
-  //   } catch (err) {
-  //     setError("Failed to load hostels. Please try again later.");
-  //     console.error("Error fetching hostels:", err);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+  useEffect(() => {
+    if (selectedHostelForRooms) {
+      setShowRoomsView(true);
+    }
+  }, [selectedHostelForRooms]);
 
   const fetchHostels = async () => {
     try {
@@ -171,14 +174,23 @@ export function HostelManagementDashboard({
       formData.append("location", hostelForm.location);
       formData.append("description", hostelForm.description);
       formData.append("availableRooms", hostelForm.availableRooms.toString());
-      formData.append("adminId", "672c1e2f0e12a835b4f1d8f9"); // Temporary adminId for testing
-      hostelForm.photos.forEach((photo, idx) => {
+
+      // Add photos to FormData
+      hostelForm.photos.forEach((photo) => {
         if (photo.file) {
           formData.append("photos", photo.file);
         }
       });
+
       const newHostel = await createHostel(formData);
-      setHostels([...hostels, newHostel]);
+
+      // Add the new hostel to the list (ensure it has _id)
+      const hostelToAdd = {
+        ...newHostel,
+        _id: newHostel._id || newHostel.id,
+      };
+
+      setHostels([...hostels, hostelToAdd]);
       setHostelForm({
         name: "",
         location: "",
@@ -187,8 +199,10 @@ export function HostelManagementDashboard({
         photos: [],
       });
       setError(null);
-    } catch (err) {
-      setError("Failed to create hostel. Please try again.");
+      setSuccessMessage("Hostel created successfully!");
+      setActiveTab("hostel-listings"); // Switch to listings to show new hostel
+    } catch (err: any) {
+      setError(err.message || "Failed to create hostel. Please try again.");
       console.error("Error creating hostel:", err);
     } finally {
       setIsLoading(false);
@@ -210,6 +224,7 @@ export function HostelManagementDashboard({
       setIsLoading(true);
       const formData = new FormData();
       formData.append("name", roomForm.name);
+      formData.append("type", roomForm.type);
       formData.append(
         "amenities",
         JSON.stringify(roomForm.amenities.split(",").map((a) => a.trim()))
@@ -229,6 +244,7 @@ export function HostelManagementDashboard({
 
       setRoomForm({
         name: "",
+        type: "",
         amenities: "",
         price: "",
         availableRooms: 0,
@@ -236,6 +252,7 @@ export function HostelManagementDashboard({
         hostelId: "",
       });
       setError(null);
+      setSuccessMessage("Room added successfully!");
     } catch (err) {
       setError("Failed to create room. Please try again.");
       console.error("Error creating room:", err);
@@ -258,6 +275,11 @@ export function HostelManagementDashboard({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEditRoom = (room: Room) => {
+    // TODO: Implement room editing functionality
+    alert("Room editing functionality will be implemented soon!");
   };
 
   const handleDeleteHostel = async (hostelId: string) => {
@@ -411,6 +433,16 @@ export function HostelManagementDashboard({
               setRoomForm((prev) => ({ ...prev, name: e.target.value }))
             }
             placeholder="Enter room name"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Room Type</label>
+          <Input
+            value={roomForm.type}
+            onChange={(e) =>
+              setRoomForm((prev) => ({ ...prev, type: e.target.value }))
+            }
+            placeholder="Enter room type (e.g., Single, Double, Suite)"
           />
         </div>
         <div>
@@ -575,6 +607,149 @@ export function HostelManagementDashboard({
     </div>
   );
 
+  const renderRoomDetails = () => {
+    const selectedHostel = hostels.find(
+      (h) => h._id === selectedHostelForRooms
+    );
+    if (!selectedHostel) return null;
+
+    return (
+      <div className="bg-white rounded-lg border p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-semibold">
+              Rooms in {selectedHostel.name}
+            </h2>
+            <p className="text-gray-600">{selectedHostel.location}</p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSelectedHostelForRooms(null);
+              setShowRoomsView(false);
+            }}
+          >
+            Back to Hostels
+          </Button>
+        </div>
+
+        {selectedHostel.rooms && selectedHostel.rooms.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {selectedHostel.rooms.map((room, index) => (
+              <div key={room._id || index} className="border rounded-lg p-4">
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-lg font-semibold">{room.name}</h3>
+                    <Badge variant="secondary" className="mt-1">
+                      {room.type}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Price:</span>
+                      <span className="font-medium">GH₵{room.price}/night</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Available:</span>
+                      <span className="font-medium">
+                        {room.availableRooms} rooms
+                      </span>
+                    </div>
+                  </div>
+
+                  {room.amenities && room.amenities.length > 0 && (
+                    <div>
+                      <span className="text-gray-600 block mb-2">
+                        Amenities:
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {room.amenities.map((amenity, amenityIndex) => (
+                          <Badge
+                            key={amenityIndex}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {amenity}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {room.photos && room.photos.length > 0 && (
+                    <div>
+                      <span className="text-gray-600 block mb-2">Photos:</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        {room.photos.slice(0, 4).map((photo, photoIndex) => (
+                          <img
+                            key={photoIndex}
+                            src={photo}
+                            alt={`${room.name} photo ${photoIndex + 1}`}
+                            className="w-full h-20 object-cover rounded-md"
+                          />
+                        ))}
+                      </div>
+                      {room.photos.length > 4 && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          +{room.photos.length - 4} more photos
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditRoom(room)}
+                      className="flex-1"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() =>
+                        handleDeleteRoom(selectedHostel._id, room._id)
+                      }
+                      className="flex-1"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No rooms added yet
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Start by adding rooms to this hostel.
+            </p>
+            <Button
+              onClick={() => {
+                setRoomForm((prev) => ({
+                  ...prev,
+                  hostelId: selectedHostel._id,
+                }));
+                setActiveTab("add-hostels");
+                setSelectedHostelForRooms(null);
+                setShowRoomsView(false);
+              }}
+            >
+              Add First Room
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -585,7 +760,9 @@ export function HostelManagementDashboard({
               Hostel Management Dashboard
             </h1>
             {userName && (
-              <p className="text-sm text-gray-600 mt-1">Welcome back, {userName}</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Welcome back, {userName}
+              </p>
             )}
           </div>
           {onLogout && (
@@ -640,15 +817,38 @@ export function HostelManagementDashboard({
         </div>
 
         {/* Tab Content */}
-        {activeTab === "add-hostels" && (
-          <div>
-            {renderAddHostelForm()}
-            {renderAddRoomForm()}
-          </div>
+        {showRoomsView ? (
+          renderRoomDetails()
+        ) : (
+          <>
+            {activeTab === "add-hostels" && (
+              <div>
+                {renderAddHostelForm()}
+                {renderAddRoomForm()}
+              </div>
+            )}
+            {activeTab === "hostel-listings" && renderHostelListings()}
+            {activeTab === "notifications" && renderNotifications()}
+          </>
         )}
-        {activeTab === "hostel-listings" && renderHostelListings()}
-        {activeTab === "notifications" && renderNotifications()}
       </div>
+
+      <AlertDialog
+        open={!!successMessage}
+        onOpenChange={() => setSuccessMessage(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Success!</AlertDialogTitle>
+            <AlertDialogDescription>{successMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setSuccessMessage(null)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
