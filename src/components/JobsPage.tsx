@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { toast } from "sonner";
@@ -48,6 +48,21 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
   );
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+
+  // Memoized calculations for tab badges
+  const unreadNotificationsCount = useMemo(
+    () => jobNotifications.filter((n) => !n.read).length,
+    [jobNotifications]
+  );
+
+  const newApplicationsCount = useMemo(
+    () =>
+      applications.filter(
+        (app) =>
+          new Date().getTime() - new Date(app.appliedDate).getTime() < 3600000
+      ).length,
+    [applications]
+  );
 
   // Fetch jobs from API
   useEffect(() => {
@@ -136,7 +151,7 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
     };
 
     fetchStudentData();
-  }, [location]);
+  }, [location.pathname, location.search]); // More specific location dependencies
 
   // Check for navigation state to set active tab
   useEffect(() => {
@@ -187,20 +202,9 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
               className="data-[state=active]:bg-blue-600 data-[state=active]:text-white relative"
             >
               History
-              {applications.filter(
-                (app) =>
-                  new Date().getTime() - new Date(app.appliedDate).getTime() <
-                  3600000
-              ).length > 0 && (
+              {newApplicationsCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {
-                    applications.filter(
-                      (app) =>
-                        new Date().getTime() -
-                          new Date(app.appliedDate).getTime() <
-                        3600000
-                    ).length
-                  }
+                  {newApplicationsCount}
                 </span>
               )}
             </TabsTrigger>
@@ -209,9 +213,9 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
               className="data-[state=active]:bg-blue-600 data-[state=active]:text-white relative"
             >
               Notifications
-              {jobNotifications.filter((n) => !n.read).length > 0 && (
+              {unreadNotificationsCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {jobNotifications.filter((n) => !n.read).length}
+                  {unreadNotificationsCount}
                 </span>
               )}
             </TabsTrigger>

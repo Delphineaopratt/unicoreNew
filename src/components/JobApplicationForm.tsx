@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -78,13 +78,16 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
   const [coverLetterError, setCoverLetterError] = useState("");
 
   // Form validation state
-  const isFormValid =
-    address.trim().length >= 10 &&
-    resume !== null &&
-    !resumeError &&
-    coverLetter.trim().length >= 100 &&
-    !addressError &&
-    !coverLetterError;
+  const isFormValid = useMemo(
+    () =>
+      address.trim().length >= 10 &&
+      resume !== null &&
+      !resumeError &&
+      coverLetter.trim().length >= 100 &&
+      !addressError &&
+      !coverLetterError,
+    [address, resume, resumeError, coverLetter, addressError, coverLetterError]
+  );
 
   // Load user profile on component mount
   useEffect(() => {

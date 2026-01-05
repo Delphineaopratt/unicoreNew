@@ -82,39 +82,44 @@ export interface Booking {
 
 // Job types
 export interface Job {
-  _id: string;
-  employer: string | User;
+  id: number;
+  employer?: string | User;
   title: string;
   company: string;
   location: string;
-  type: 'full-time' | 'part-time' | 'internship' | 'contract';
+  type: string;
   description: string;
-  requirements: string[];
-  responsibilities: string[];
-  salary: {
+  requirements: string;
+  salary?: {
     min: number;
     max: number;
     currency: string;
   };
-  benefits: string[];
-  skills: string[];
-  status: 'active' | 'closed' | 'draft';
-  applicationDeadline: string;
-  createdAt: string;
+  minSalary?: string;
+  maxSalary?: string;
+  benefits?: string[];
+  skills?: string[];
+  status?: 'active' | 'closed' | 'draft';
+  applicationDeadline?: string;
+  createdAt?: string;
 }
 
 export interface JobApplication {
-  _id: string;
-  student: string | User;
-  job: string | Job;
-  coverLetter: string;
-  resume: {
+  id: string;
+  student?: string | User;
+  job?: string | Job;
+  jobTitle?: string;
+  company?: string;
+  appliedDate?: string;
+  coverLetter?: string;
+  address?: string;
+  resume?: {
     url: string;
     filename: string;
   };
-  status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'accepted';
+  status?: 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'accepted';
   employerNotes?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 // Notification types

@@ -63,17 +63,17 @@ export const getJobApplications = async (jobId: string) => {
 };
 
 export const getMyApplications = async () => {
-  const response = await api.get('/applications/me');
+  const response = await api.get('/jobs/applications/me');
   return response.data;
 };
 
 export const getApplicationById = async (id: string) => {
-  const response = await api.get(`/applications/${id}`);
+  const response = await api.get(`/jobs/applications/${id}`);
   return response.data;
 };
 
 export const updateApplicationStatus = async (id: string, status: string) => {
-  const response = await api.put(`/applications/${id}/status`, { status });
+  const response = await api.put(`/jobs/applications/${id}/status`, { status });
   return response.data;
 };
 
