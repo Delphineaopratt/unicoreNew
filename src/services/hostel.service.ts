@@ -1,5 +1,7 @@
+
 import axios from 'axios';
 import { Hostel, Room } from '../types';
+
 
 const API_URL = 'http://localhost:5001/api/hostels';
 
@@ -41,31 +43,63 @@ export const getHostelById = async (id: string) => {
   }
 };
 
-export const createHostel = async (hostelData: FormData | any) => {
+
+
+export const createHostel = async (hostelForm) => {
   try {
-    const token = localStorage.getItem('token');
-    const headers: any = {
-      Authorization: `Bearer ${token}`,
-    };
+    const formData = new FormData();
+    formData.append("name", hostelForm.name);
+    formData.append("location", hostelForm.location);
+    formData.append("description", hostelForm.description);
+    formData.append("availableRooms", hostelForm.availableRooms);
+    alert(formData.get("name"))
+    console.log(hostelForm);
 
-    // Only set Content-Type if not already a FormData (multipart)
-    if (!(hostelData instanceof FormData)) {
-      headers['Content-Type'] = 'application/json';
-    }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    // Add photos
+    // if (hostelForm.photos && hostelForm.photos.length > 0) {
+    //   Array.from(hostelForm.photos).forEach((file) => {
+    //     formData.append("photos", file);
+    //   });
+    // }
+
+    // Send to backend
     const response = await axios.post(
-      'http://localhost:5001/api/hostels',
-      hostelData,
-      { headers }
+      "http://localhost:5000/api/hostels",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
     );
 
-    console.log('✅ Hostel created:', response.data);
-    return response.data.data || response.data;
-  } catch (error: any) {
-    console.error('❌ Error creating hostel:', error.response?.data || error);
-    throw error.response?.data || error;
+    console.log("✅ Hostel created:", response.data);
+    alert("Hostel created successfully!");
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error creating hostel:", error.response?.data || error);
+    alert("Failed to create hostel. Check console for details.");
   }
 };
+
 
 export const updateHostel = async (id: string, hostelData: Partial<Hostel>) => {
   try {
@@ -90,22 +124,12 @@ export const deleteHostel = async (id: string) => {
 // ✅ Room services
 export const addRoom = async (hostelId: string, roomData: FormData) => {
   try {
-    const token = localStorage.getItem('token');
-    const headers: any = {
-      Authorization: `Bearer ${token}`,
-    };
-
-    // Don't set Content-Type for FormData - let axios handle it
-    const response = await axios.post(
-      `http://localhost:5001/api/hostels/${hostelId}/rooms`,
-      roomData,
-      { headers }
-    );
-
-    console.log('✅ Room added:', response.data);
+    const response = await api.post(`/${hostelId}/rooms`, roomData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data.data || response.data;
   } catch (error: any) {
-    console.error('❌ Error adding room:', error.response?.data || error);
+    console.error('Error adding room:', error);
     throw error.response?.data || error;
   }
 };
@@ -148,4 +172,3 @@ export const uploadImage = async (file: File) => {
     throw error.response?.data || error;
   }
 };
-
