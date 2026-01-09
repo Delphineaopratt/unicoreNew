@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 // import { ImageWithFallback } from '/../figma/ImageWithFallback';
-import exampleImage from "figma:asset/c8af16ee152d7796e2ddb92f5fc0ed8a307ab59c.png";
+// import exampleImage from "figma:asset/c8af16ee152d7796e2ddb92f5fc0ed8a307ab59c.png";
 import findhostel from "../assets/findhostel.jpg";
 import careerpotential from "../assets/careerpotential.jpg";
 import chatbot from "../assets/chatbot.jpg";

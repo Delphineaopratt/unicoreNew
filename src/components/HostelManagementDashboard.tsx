@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Building2,
   List,
@@ -45,16 +46,16 @@ export function HostelManagementDashboard({
   setNotifications,
   onLogout,
 }: HostelManagementDashboardProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<
     "add-hostels" | "hostel-listings" | "notifications"
   >("add-hostels");
   const [selectedHostelForRooms, setSelectedHostelForRooms] = useState<
     string | null
   >(null);
-  const [showRoomsView, setShowRoomsView] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>('');
+  const [userName, setUserName] = useState<string>("");
 
   // Form states
   const [hostelForm, setHostelForm] = useState({
@@ -67,6 +68,7 @@ export function HostelManagementDashboard({
 
   const [roomForm, setRoomForm] = useState({
     name: "",
+    type: "",
     amenities: "",
     price: "",
     availableRooms: 0,
@@ -76,15 +78,15 @@ export function HostelManagementDashboard({
 
   useEffect(() => {
     fetchHostels();
-    
+
     // Get user name from localStorage
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem("user");
     if (user) {
       try {
         const parsedUser = JSON.parse(user);
-        setUserName(parsedUser.name || 'Admin');
+        setUserName(parsedUser.name || "Admin");
       } catch (e) {
-        setUserName('Admin');
+        setUserName("Admin");
       }
     }
   }, []);
@@ -198,6 +200,7 @@ export function HostelManagementDashboard({
   const handleCreateRoom = async () => {
     if (
       !roomForm.name ||
+      !roomForm.type ||
       !roomForm.amenities ||
       !roomForm.price ||
       !roomForm.hostelId
@@ -210,6 +213,7 @@ export function HostelManagementDashboard({
       setIsLoading(true);
       const formData = new FormData();
       formData.append("name", roomForm.name);
+      formData.append("type", roomForm.type);
       formData.append(
         "amenities",
         JSON.stringify(roomForm.amenities.split(",").map((a) => a.trim()))
@@ -229,6 +233,7 @@ export function HostelManagementDashboard({
 
       setRoomForm({
         name: "",
+        type: "",
         amenities: "",
         price: "",
         availableRooms: 0,
@@ -414,6 +419,16 @@ export function HostelManagementDashboard({
           />
         </div>
         <div>
+          <label className="block text-sm font-medium mb-1">Room Type</label>
+          <Input
+            value={roomForm.type}
+            onChange={(e) =>
+              setRoomForm((prev) => ({ ...prev, type: e.target.value }))
+            }
+            placeholder="e.g., Single, Shared room of 4, Double"
+          />
+        </div>
+        <div>
           <label className="block text-sm font-medium mb-1">Amenities</label>
           <Input
             value={roomForm.amenities}
@@ -529,7 +544,9 @@ export function HostelManagementDashboard({
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => setSelectedHostelForRooms(hostel._id)}
+                onClick={() =>
+                  navigate(`/hostel/room-details?hostelId=${hostel._id}`)
+                }
                 className="flex-1"
               >
                 View Rooms
@@ -585,7 +602,9 @@ export function HostelManagementDashboard({
               Hostel Management Dashboard
             </h1>
             {userName && (
-              <p className="text-sm text-gray-600 mt-1">Welcome back, {userName}</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Welcome back, {userName}
+              </p>
             )}
           </div>
           {onLogout && (
@@ -613,7 +632,10 @@ export function HostelManagementDashboard({
         <div className="flex gap-4 mb-6">
           <Button
             variant={activeTab === "add-hostels" ? "default" : "outline"}
-            onClick={() => setActiveTab("add-hostels")}
+            onClick={() => {
+              setActiveTab("add-hostels");
+              setSelectedHostelForRooms(null);
+            }}
           >
             <Upload className="w-4 h-4 mr-2" />
             Add Hostels
@@ -627,7 +649,10 @@ export function HostelManagementDashboard({
           </Button>
           <Button
             variant={activeTab === "notifications" ? "default" : "outline"}
-            onClick={() => setActiveTab("notifications")}
+            onClick={() => {
+              setActiveTab("notifications");
+              setSelectedHostelForRooms(null);
+            }}
           >
             <Bell className="w-4 h-4 mr-2" />
             Notifications

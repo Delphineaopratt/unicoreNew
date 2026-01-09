@@ -8,6 +8,7 @@ import { CandidatesPage } from "./components/CandidatesPage";
 import { JobListingsPage } from "./components/JobListingsPage";
 import { StudentDashboard } from "./components/StudentDashboard";
 import { HostelManagementDashboard } from "./components/HostelManagementDashboard";
+import { RoomDetails } from "./components/RoomDetails";
 import { HostelBooking } from "./components/HostelBooking";
 import { HostelDetails } from "./components/HostelDetails";
 import { JobsPage } from "./components/JobsPage";
@@ -884,6 +885,7 @@ export default function App() {
                       />
                     }
                   />
+                  <Route path="room-details" element={<RoomDetails />} />
                   <Route
                     path="*"
                     element={<Navigate to="/hostel/dashboard" replace />}

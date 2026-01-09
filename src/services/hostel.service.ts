@@ -55,26 +55,6 @@ export const createHostel = async (hostelForm) => {
     alert(formData.get("name"))
     console.log(hostelForm);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     // Add photos
     // if (hostelForm.photos && hostelForm.photos.length > 0) {
     //   Array.from(hostelForm.photos).forEach((file) => {
@@ -84,7 +64,7 @@ export const createHostel = async (hostelForm) => {
 
     // Send to backend
     const response = await axios.post(
-      "http://localhost:5000/api/hostels",
+      "http://localhost:5001/api/hostels",
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
