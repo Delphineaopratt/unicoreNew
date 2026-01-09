@@ -57,6 +57,12 @@ export function HostelManagementDashboard({
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
 
+  const navItems = [
+    { key: "add-hostels", label: "Dashboard", icon: Upload },
+    { key: "hostel-listings", label: "Hostels", icon: List },
+    { key: "notifications", label: "Notifications", icon: Bell },
+  ];
+
   // Form states
   const [hostelForm, setHostelForm] = useState({
     name: "",
@@ -280,104 +286,108 @@ export function HostelManagementDashboard({
   };
 
   const renderAddHostelForm = () => (
-    <div className="bg-white rounded-lg border p-6">
-      <h2 className="text-xl font-semibold mb-4">Add New Hostel</h2>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Hostel Name</label>
-          <Input
-            value={hostelForm.name}
-            onChange={(e) =>
-              setHostelForm((prev) => ({ ...prev, name: e.target.value }))
-            }
-            placeholder="Enter hostel name"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Location</label>
-          <Input
-            value={hostelForm.location}
-            onChange={(e) =>
-              setHostelForm((prev) => ({ ...prev, location: e.target.value }))
-            }
-            placeholder="Enter location"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <Textarea
-            value={hostelForm.description}
-            onChange={(e) =>
-              setHostelForm((prev) => ({
-                ...prev,
-                description: e.target.value,
-              }))
-            }
-            placeholder="Enter description"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Available Rooms
-          </label>
-          <Input
-            type="number"
-            value={hostelForm.availableRooms}
-            onChange={(e) =>
-              setHostelForm((prev) => ({
-                ...prev,
-                availableRooms: parseInt(e.target.value) || 0,
-              }))
-            }
-            placeholder="Enter number of available rooms"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Photos</label>
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleHostelPhotoUpload}
-            className="hidden"
-            id="hostel-photos"
-          />
-          <label
-            htmlFor="hostel-photos"
-            className="inline-block px-4 py-2 border rounded-md cursor-pointer hover:bg-gray-50"
-          >
-            Choose Files
-          </label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {hostelForm.photos.map((photo) => (
-              <div key={photo.id} className="relative w-20 h-20">
-                <img
-                  src={photo.url}
-                  alt="Preview"
-                  className="w-full h-full object-cover rounded-md"
-                />
-                <button
-                  onClick={() =>
-                    setHostelForm((prev) => ({
-                      ...prev,
-                      photos: prev.photos.filter((p) => p.id !== photo.id),
-                    }))
-                  }
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">Hostel Admin Dashboard</h1>
+
+      <div className="bg-white rounded-lg border p-6">
+        <h2 className="text-xl font-semibold mb-4">Add New Hostel</h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Hostel Name</label>
+            <Input
+              value={hostelForm.name}
+              onChange={(e) =>
+                setHostelForm((prev) => ({ ...prev, name: e.target.value }))
+              }
+              placeholder="Enter hostel name"
+            />
           </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Location</label>
+            <Input
+              value={hostelForm.location}
+              onChange={(e) =>
+                setHostelForm((prev) => ({ ...prev, location: e.target.value }))
+              }
+              placeholder="Enter location"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <Textarea
+              value={hostelForm.description}
+              onChange={(e) =>
+                setHostelForm((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              placeholder="Enter description"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Available Rooms</label>
+            <Input
+              type="number"
+              value={hostelForm.availableRooms}
+              onChange={(e) =>
+                setHostelForm((prev) => ({
+                  ...prev,
+                  availableRooms: parseInt(e.target.value) || 0,
+                }))
+              }
+              placeholder="Enter number of available rooms"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Photos</label>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleHostelPhotoUpload}
+              className="hidden"
+              id="hostel-photos"
+            />
+            <label
+              htmlFor="hostel-photos"
+              className="inline-block px-4 py-2 border rounded-md cursor-pointer hover:bg-gray-50"
+            >
+              Choose Files
+            </label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {hostelForm.photos.map((photo) => (
+                <div key={photo.id} className="relative w-20 h-20">
+                  <img
+                    src={photo.url}
+                    alt="Preview"
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                  <button
+                    onClick={() =>
+                      setHostelForm((prev) => ({
+                        ...prev,
+                        photos: prev.photos.filter((p) => p.id !== photo.id),
+                      }))
+                    }
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Button
+            onClick={handleCreateHostel}
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? "Creating..." : "Create Hostel"}
+          </Button>
         </div>
-        <Button
-          onClick={handleCreateHostel}
-          disabled={isLoading}
-          className="w-full"
-        >
-          {isLoading ? "Creating..." : "Create Hostel"}
-        </Button>
       </div>
     </div>
   );
@@ -516,8 +526,11 @@ export function HostelManagementDashboard({
   );
 
   const renderHostelListings = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {hostels.map((hostel) => (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Hostel Listings</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {hostels.map((hostel) => (
         <div
           key={hostel._id}
           className="bg-white rounded-lg border overflow-hidden"
@@ -561,12 +574,15 @@ export function HostelManagementDashboard({
             </div>
           </div>
         </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 
   const renderNotifications = () => (
     <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Notifications</h2>
+
       {notifications.map((notification) => (
         <div
           key={notification.id}
@@ -593,87 +609,91 @@ export function HostelManagementDashboard({
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-8 py-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">
-              Hostel Management Dashboard
-            </h1>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-border min-h-screen flex flex-col sticky top-0 self-start">
+        <div className="p-6 flex-1 flex flex-col">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-4 h-4 bg-white rounded-full"></div>
+              </div>
+              <span className="font-medium text-lg">Unicore</span>
+            </div>
             {userName && (
-              <p className="text-sm text-gray-600 mt-1">
-                Welcome back, {userName}
-              </p>
+              <p className="text-sm text-gray-600 ml-11">Welcome, {userName}</p>
             )}
           </div>
+
+          <nav className="space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.key;
+              const unread =
+                item.key === "notifications"
+                  ? notifications.filter((n) => !n.read).length
+                  : 0;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => {
+                    setActiveTab(item.key as typeof activeTab);
+                    setSelectedHostelForRooms(null);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${
+                    isActive
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                  {unread > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto bg-red-500 text-white"
+                    >
+                      {unread}
+                    </Badge>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
           {onLogout && (
-            <Button
-              variant="ghost"
-              onClick={onLogout}
-              className="flex items-center gap-2 text-gray-600 hover:bg-gray-50"
-            >
-              <LogOut size={20} />
-              <span>Logout</span>
-            </Button>
+            <div className="mt-auto pt-6 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                onClick={onLogout}
+                className="w-full flex items-center gap-3 px-3 py-2 justify-start transition-colors font-medium"
+                style={{ color: "#dc2626" }}
+              >
+                <LogOut size={20} style={{ color: "#dc2626" }} />
+                <span style={{ color: "#dc2626" }}>Logout</span>
+              </Button>
+            </div>
           )}
         </div>
-      </div>
+      </aside>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
+      {/* Main Content */}
+      <main className="flex-1 px-8 py-8">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
             {error}
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex gap-4 mb-6">
-          <Button
-            variant={activeTab === "add-hostels" ? "default" : "outline"}
-            onClick={() => {
-              setActiveTab("add-hostels");
-              setSelectedHostelForRooms(null);
-            }}
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Add Hostels
-          </Button>
-          <Button
-            variant={activeTab === "hostel-listings" ? "default" : "outline"}
-            onClick={() => setActiveTab("hostel-listings")}
-          >
-            <List className="w-4 h-4 mr-2" />
-            Hostel Listings
-          </Button>
-          <Button
-            variant={activeTab === "notifications" ? "default" : "outline"}
-            onClick={() => {
-              setActiveTab("notifications");
-              setSelectedHostelForRooms(null);
-            }}
-          >
-            <Bell className="w-4 h-4 mr-2" />
-            Notifications
-            {notifications.filter((n) => !n.read).length > 0 && (
-              <Badge variant="secondary" className="ml-2 bg-red-500 text-white">
-                {notifications.filter((n) => !n.read).length}
-              </Badge>
-            )}
-          </Button>
-        </div>
-
-        {/* Tab Content */}
         {activeTab === "add-hostels" && (
-          <div>
+          <div className="space-y-6">
             {renderAddHostelForm()}
             {renderAddRoomForm()}
           </div>
         )}
         {activeTab === "hostel-listings" && renderHostelListings()}
         {activeTab === "notifications" && renderNotifications()}
-      </div>
+      </main>
     </div>
   );
 }
