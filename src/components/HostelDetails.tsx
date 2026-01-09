@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   MapPin,
@@ -37,12 +37,19 @@ interface Booking {
 }
 
 interface HostelDetailsProps {
-  hostelId: string;
+  hostelId?: string;
   onBooking: (booking: Booking) => void;
 }
 
-export function HostelDetails({ hostelId, onBooking }: HostelDetailsProps) {
+export function HostelDetails({
+  hostelId: propHostelId,
+  onBooking,
+}: HostelDetailsProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryHostelId = searchParams.get("id");
+  // Use query param if available, fall back to prop, then default to "1"
+  const hostelId = queryHostelId || propHostelId || "1";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [hostel, setHostel] = useState<Hostel | null>(null);
@@ -53,95 +60,8 @@ export function HostelDetails({ hostelId, onBooking }: HostelDetailsProps) {
     fetchHostels();
   }, [hostelId]);
 
-  const rooms: Room[] = [
-    {
-      id: "1",
-      name: "Room 1",
-      type: "Shared room of 4",
-      features: [
-        "Shared bathroom",
-        "Shared kitchen",
-        "Balcony",
-        "Shared bathroom",
-      ],
-      price: "2000 per bed",
-      image:
-        "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxidW5rJTIwYmVkJTIwaG9zdGVsJTIwZG9ybWl0b3J5fGVufDF8fHx8MTc1ODI3ODQ4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-    {
-      id: "2",
-      name: "Room 1",
-      type: "Shared room of 4",
-      features: [
-        "Shared bathroom",
-        "Shared kitchen",
-        "Balcony",
-        "Shared bathroom",
-      ],
-      price: "2000 per bed",
-      image:
-        "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxidW5rJTIwYmVkJTIwaG9zdGVsJTIwZG9ybWl0b3J5fGVufDF8fHx8MTc1ODI3ODQ4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-    {
-      id: "3",
-      name: "Room 1",
-      type: "Shared room of 4",
-      features: [
-        "Shared bathroom",
-        "Shared kitchen",
-        "Balcony",
-        "Shared bathroom",
-      ],
-      price: "2000 per bed",
-      image:
-        "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxidW5rJTIwYmVkJTIwaG9zdGVsJTIwZG9ybWl0b3J5fGVufDF8fHx8MTc1ODI3ODQ4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-    {
-      id: "4",
-      name: "Room 1",
-      type: "Shared room of 4",
-      features: [
-        "Shared bathroom",
-        "Shared kitchen",
-        "Balcony",
-        "Shared bathroom",
-      ],
-      price: "2000 per bed",
-      image:
-        "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxidW5rJTIwYmVkJTIwaG9zdGVsJTIwZG9ybWl0b3J5fGVufDF8fHx8MTc1ODI3ODQ4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-    {
-      id: "5",
-      name: "Room 1",
-      type: "Shared room of 4",
-      features: [
-        "Shared bathroom",
-        "Shared kitchen",
-        "Balcony",
-        "Shared bathroom",
-      ],
-      price: "2000 per bed",
-      image:
-        "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxidW5rJTIwYmVkJTIwaG9zdGVsJTIwZG9ybWl0b3J5fGVufDF8fHx8MTc1ODI3ODQ4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-    {
-      id: "6",
-      name: "Room 1",
-      type: "Shared room of 4",
-      features: [
-        "Shared bathroom",
-        "Shared kitchen",
-        "Balcony",
-        "Shared bathroom",
-      ],
-      price: "2000 per bed",
-      image:
-        "https://images.unsplash.com/photo-1709805619372-40de3f158e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxidW5rJTIwYmVkJTIwaG9zdGVsJTIwZG9ybWl0b3J5fGVufDF8fHx8MTc1ODI3ODQ4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    },
-  ];
-
   const handleBookRoom = (roomId: string) => {
-    const availableRooms = hostel?.rooms || rooms;
+    const availableRooms = hostel?.rooms || [];
     const room = availableRooms.find(
       (r) => (r as any).id === roomId || (r as any)._id === roomId
     );
@@ -217,11 +137,7 @@ export function HostelDetails({ hostelId, onBooking }: HostelDetailsProps) {
     }
   };
 
-  const displayRooms = hostel?.rooms || rooms;
-  const displayHostelName = hostel?.name || "Stephanie's Hostel";
-  const displayHostelDescription =
-    hostel?.description ||
-    "Stephanie's Hostel is located at Kisseman, near Bethel Dental Clinic, on the 19th Street of Nii Lane. We have comfortable single and shared rooms coming at affordable prices. Each single room is equipped with... Shared rooms are...";
+  const displayRooms = hostel?.rooms || [];
 
   if (loading) {
     return (
@@ -279,61 +195,109 @@ export function HostelDetails({ hostelId, onBooking }: HostelDetailsProps) {
       <div className="p-6">
         {/* Hostel Description */}
         <div className="bg-white rounded-lg p-6 mb-8 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Stephanie's Hostel</h2>
-          <p className="text-gray-600 leading-relaxed">
-            Stephanie's Hostel is located at Kisseman, near Bethel Dental
-            Clinic, on the 19th Street of Nii Lane. We have comfortable single
-            and shared rooms coming at affordable prices. Each single room is
-            equipped with... Shared rooms are...
-          </p>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold mb-2">{hostel?.name}</h2>
+            {hostel?.location && (
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin className="w-4 h-4" />
+                <span>{hostel.location}</span>
+              </div>
+            )}
+          </div>
+          <p className="text-gray-600 leading-relaxed">{hostel?.description}</p>
         </div>
 
         {/* Available Rooms */}
         <div>
           <h2 className="text-xl font-semibold mb-6">Available Rooms</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rooms.map((room) => (
-              <div
-                key={room.id}
-                className="bg-white rounded-lg overflow-hidden shadow-sm"
-              >
-                <div className="relative">
-                  {/* <ImageWithFallback
-                    src={room.image}
-                    alt={room.name}
-                    className="w-full h-48 object-cover"
-                  /> */}
-                  {/* Slide indicators */}
-                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                    <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
-                    <div className="w-1.5 h-1.5 bg-white/50 rounded-full"></div>
-                    <div className="w-1.5 h-1.5 bg-white/50 rounded-full"></div>
-                    <div className="w-1.5 h-1.5 bg-white/50 rounded-full"></div>
-                  </div>
-                </div>
-
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2">{room.name}</h3>
-
-                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
-                    {room.features.map((feature, index) => (
-                      <div key={index} className="flex items-center">
-                        <div className="w-1 h-1 bg-gray-400 rounded-full mr-2"></div>
-                        {feature}
+          {displayRooms && displayRooms.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayRooms.map((room: any, index: number) => (
+                <div
+                  key={room._id || room.id || index}
+                  className="bg-white rounded-lg overflow-hidden shadow-sm"
+                >
+                  <div className="relative bg-gray-200 h-48">
+                    {room.photos && room.photos.length > 0 ? (
+                      <img
+                        src={`http://localhost:5001${room.photos[0]}`}
+                        alt={room.name}
+                        className="w-full h-full object-cover"
+                        onError={(e: any) => {
+                          e.target.src =
+                            "https://via.placeholder.com/300x200?text=Room+Photo";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <BedDouble className="w-12 h-12 text-gray-400" />
                       </div>
-                    ))}
+                    )}
+                    {/* Slide indicators */}
+                    {room.photos && room.photos.length > 0 && (
+                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                        {room.photos.map((_: any, i: number) => (
+                          <div
+                            key={i}
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              i === 0 ? "bg-blue-600" : "bg-white/50"
+                            }`}
+                          ></div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => handleBookRoom(room.id)}
-                  >
-                    Book
-                  </Button>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">{room.name}</h3>
+                    {room.type && (
+                      <p className="text-sm text-gray-600 mb-3">{room.type}</p>
+                    )}
+
+                    {room.amenities && room.amenities.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
+                        {(Array.isArray(room.amenities)
+                          ? room.amenities
+                          : typeof room.amenities === "string"
+                          ? [room.amenities]
+                          : []
+                        ).map((amenity: any, idx: number) => (
+                          <div key={idx} className="flex items-center">
+                            <div className="w-1 h-1 bg-gray-400 rounded-full mr-2"></div>
+                            {amenity}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-lg font-semibold text-blue-600">
+                        GHS {room.price}
+                      </div>
+                      {room.availableRooms !== undefined && (
+                        <span className="text-sm text-gray-600">
+                          {room.availableRooms} available
+                        </span>
+                      )}
+                    </div>
+
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={() => handleBookRoom(room._id || room.id)}
+                    >
+                      Book
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg p-8 text-center">
+              <p className="text-gray-600">
+                No rooms available for this hostel.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -342,7 +306,7 @@ export function HostelDetails({ hostelId, onBooking }: HostelDetailsProps) {
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleConfirmBooking}
         room={selectedRoom}
-        hostelName="Stephanie's Hostel"
+        hostelName={hostel?.name || "Hostel"}
       />
     </div>
   );

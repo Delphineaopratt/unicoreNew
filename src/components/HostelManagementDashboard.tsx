@@ -294,7 +294,9 @@ export function HostelManagementDashboard({
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Hostel Name</label>
+            <label className="block text-sm font-medium mb-1">
+              Hostel Name
+            </label>
             <Input
               value={hostelForm.name}
               onChange={(e) =>
@@ -314,7 +316,9 @@ export function HostelManagementDashboard({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
+            <label className="block text-sm font-medium mb-1">
+              Description
+            </label>
             <Textarea
               value={hostelForm.description}
               onChange={(e) =>
@@ -327,7 +331,9 @@ export function HostelManagementDashboard({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Available Rooms</label>
+            <label className="block text-sm font-medium mb-1">
+              Available Rooms
+            </label>
             <Input
               type="number"
               value={hostelForm.availableRooms}
@@ -531,11 +537,11 @@ export function HostelManagementDashboard({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {hostels.map((hostel) => (
-        <div
-          key={hostel._id}
-          className="bg-white rounded-lg border overflow-hidden"
-        >
-          {/* <div className="relative h-48">
+          <div
+            key={hostel._id}
+            className="bg-white rounded-lg border overflow-hidden"
+          >
+            {/* <div className="relative h-48">
             {hostel.photos && hostel.photos.length > 0 ? (
               <ImageWithFallback
                 src={hostel.photos[0]}
@@ -548,32 +554,32 @@ export function HostelManagementDashboard({
               </div>
             )}
           </div> */}
-          <div className="p-4">
-            <h3 className="text-lg font-semibold mb-2">{hostel.name}</h3>
-            <p className="text-gray-600 mb-2">{hostel.location}</p>
-            <p className="text-gray-600 mb-4">
-              {hostel.availableRooms} rooms available
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() =>
-                  navigate(`/hostel/room-details?hostelId=${hostel._id}`)
-                }
-                className="flex-1"
-              >
-                View Rooms
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => handleDeleteHostel(hostel._id)}
-                className="flex-1"
-              >
-                Delete
-              </Button>
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-2">{hostel.name}</h3>
+              <p className="text-gray-600 mb-2">{hostel.location}</p>
+              <p className="text-gray-600 mb-4">
+                {hostel.availableRooms} rooms available
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    navigate(`/hostel/room-details?hostelId=${hostel._id}`)
+                  }
+                  className="flex-1"
+                >
+                  View Rooms
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleDeleteHostel(hostel._id)}
+                  className="flex-1"
+                >
+                  Delete
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
         ))}
       </div>
     </div>
