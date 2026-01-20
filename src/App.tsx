@@ -21,6 +21,7 @@ import { LandingPage } from "./components/LandingPage";
 import { LoginForm } from "./components/LoginForm";
 import { SignupForm } from "./components/SignupForm";
 import { Toaster } from "./components/ui/sonner";
+import { UnibotProvider } from "./context/UnibotContext";
 
 interface Job {
   id: number;
@@ -693,8 +694,9 @@ export default function App() {
   }
 
   return (
-    <>
-      <Routes>
+    <UnibotProvider>
+      <>
+        <Routes>
         {/* Public Routes */}
         <Route
           path="/"
@@ -906,6 +908,7 @@ export default function App() {
         isInitialSetup={userProfile && !userProfile.email}
       />
       <Toaster />
-    </>
+      </>
+    </UnibotProvider>
   );
 }
