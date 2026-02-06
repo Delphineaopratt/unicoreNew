@@ -45,38 +45,25 @@ export const getHostelById = async (id: string) => {
 
 
 
-export const createHostel = async (hostelForm) => {
+export const createHostel = async (formData: FormData) => {
   try {
-    const formData = new FormData();
-    formData.append("name", hostelForm.name);
-    formData.append("location", hostelForm.location);
-    formData.append("description", hostelForm.description);
-    formData.append("availableRooms", hostelForm.availableRooms);
-    alert(formData.get("name"))
-    console.log(hostelForm);
-
-    // Add photos
-    // if (hostelForm.photos && hostelForm.photos.length > 0) {
-    //   Array.from(hostelForm.photos).forEach((file) => {
-    //     formData.append("photos", file);
-    //   });
-    // }
-
-    // Send to backend
+    const token = localStorage.getItem('token');
+    
     const response = await axios.post(
       "http://localhost:5001/api/hostels",
       formData,
       {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${token}`
+        },
       }
     );
 
-    console.log("✅ Hostel created:", response.data);
-    alert("Hostel created successfully!");
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error creating hostel:", error.response?.data || error);
-    alert("Failed to create hostel. Check console for details.");
+    throw error;
   }
 };
 

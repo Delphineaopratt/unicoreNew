@@ -15,6 +15,7 @@ import { getHostelById } from "../services/hostel.service";
 import { createBooking } from "../services/booking.service";
 import { Hostel, Room as RoomType } from "../types";
 import { toast } from "sonner";
+import MapDisplay from "./Map/MapDisplay";
 
 interface Room {
   id: string;
@@ -198,13 +199,25 @@ export function HostelDetails({
           <div className="mb-4">
             <h2 className="text-xl font-semibold mb-2">{hostel?.name}</h2>
             {hostel?.location && (
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-600 mb-4">
                 <MapPin className="w-4 h-4" />
                 <span>{hostel.location}</span>
               </div>
             )}
           </div>
-          <p className="text-gray-600 leading-relaxed">{hostel?.description}</p>
+          <p className="text-gray-600 leading-relaxed mb-6">{hostel?.description}</p>
+          
+          {/* Map Display */}
+          {hostel?.coordinates?.latitude && hostel?.coordinates?.longitude && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-3">Location</h3>
+              <MapDisplay
+                coordinates={hostel.coordinates}
+                locationName={hostel.location}
+                hostelName={hostel.name}
+              />
+            </div>
+          )}
         </div>
 
         {/* Available Rooms */}

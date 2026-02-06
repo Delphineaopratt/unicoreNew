@@ -7,6 +7,7 @@ import { Textarea } from "../ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { createHostel } from "../../services/hostel.service";
 import { toast } from "sonner";
+import LocationPicker from "./LocationPicker";
 
 interface HostelPhoto {
   id: string;
@@ -24,6 +25,10 @@ function CreateHostelPage() {
     availableRooms: 0,
     photos: [] as HostelPhoto[],
   });
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  }>({ latitude: 5.6037, longitude: -0.1870 });
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -61,6 +66,8 @@ function CreateHostelPage() {
       formData.append("description", hostelForm.description);
       formData.append("availableRooms", hostelForm.availableRooms.toString());
       formData.append("adminId", "672c1e2f0e12a835b4f1d8f9");
+      formData.append("coordinates[latitude]", coordinates.latitude.toString());
+      formData.append("coordinates[longitude]", coordinates.longitude.toString());
       
       hostelForm.photos.forEach((photo) => {
         if (photo.file) {
@@ -79,6 +86,7 @@ function CreateHostelPage() {
         availableRooms: 0,
         photos: [],
       });
+      setCoordinates({ latitude: 5.6037, longitude: -0.1870 });
       
       navigate("/hostel-admin/hostels");
     } catch (err) {
@@ -133,20 +141,15 @@ function CreateHostelPage() {
             />
           </div>
 
-          {/* Location */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Location <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={hostelForm.location}
-              onChange={(e) =>
-                setHostelForm((prev) => ({ ...prev, location: e.target.value }))
-              }
-              placeholder="Enter location (e.g., Accra, Ghana)"
-              className="text-base"
-            />
-          </div>
+          {/* Location with Map */}
+          <LocationPicker
+            location={hostelForm.location}
+            coordinates={coordinates}
+            onLocationChange={(location) =>
+              setHostelForm((prev) => ({ ...prev, location }))
+            }
+            onCoordinatesChange={setCoordinates}
+          />
 
           {/* Description */}
           <div>

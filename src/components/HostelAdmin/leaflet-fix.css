@@ -1,0 +1,25 @@
+/* Fix for Leaflet map display issues */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Ensure marker images load properly */
+.leaflet-default-icon-path {
+  background-image: url('~leaflet/dist/images/marker-icon.png');
+}
+
+/* Fix for tile loading */
+.leaflet-tile-container {
+  pointer-events: auto;
+}
+
+/* Ensure proper map rendering */
+.leaflet-pane {
+  z-index: auto;
+}
+
+.leaflet-map-pane {
+  z-index: auto;
+}
