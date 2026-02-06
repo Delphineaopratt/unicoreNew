@@ -7,7 +7,7 @@ import { ApplicationsPage } from "./components/ApplicationsPage";
 import { CandidatesPage } from "./components/CandidatesPage";
 import { JobListingsPage } from "./components/JobListingsPage";
 import { StudentDashboard } from "./components/StudentDashboard";
-import { HostelManagementDashboard } from "./components/HostelManagementDashboard";
+import { HostelAdminDashboard } from "./components/HostelAdmin/HostelAdminDashboard";
 import { RoomDetails } from "./components/RoomDetails";
 import { HostelBooking } from "./components/HostelBooking";
 import { HostelDetails } from "./components/HostelDetails";
@@ -475,7 +475,7 @@ export default function App() {
         await fetchEmployerData();
         navigate("/employer/dashboard");
       } else {
-        navigate("/hostel/dashboard");
+        navigate("/hostel-admin");
       }
     } catch (error: any) {
       console.error("Login failed:", error);
@@ -507,7 +507,7 @@ export default function App() {
       if (userData.userType === "student") {
         navigate("/student/dashboard");
       } else if (userData.userType === "hostel-admin") {
-        navigate("/hostel/dashboard");
+        navigate("/hostel-admin");
       } else {
         navigate("/employer/dashboard");
       }
@@ -868,34 +868,24 @@ export default function App() {
 
         {/* Hostel Admin Routes */}
         <Route
-          path="/hostel/*"
+          path="/hostel-admin/*"
           element={
             <ProtectedRoute
               isAuthenticated={isAuthenticated && userType === "hostel-admin"}
             >
-              <DashboardLayout userType={userType} onLogout={handleLogout}>
-                <Routes>
-                  <Route
-                    path="dashboard"
-                    element={
-                      <HostelManagementDashboard
-                        hostels={hostelsData}
-                        setHostels={setHostelsData}
-                        notifications={hostelNotifications}
-                        setNotifications={setHostelNotifications}
-                        onLogout={handleLogout}
-                      />
-                    }
-                  />
-                  <Route path="room-details" element={<RoomDetails />} />
-                  <Route
-                    path="*"
-                    element={<Navigate to="/hostel/dashboard" replace />}
-                  />
-                </Routes>
-              </DashboardLayout>
+              <HostelAdminDashboard
+                notifications={hostelNotifications}
+                setNotifications={setHostelNotifications}
+                onLogout={handleLogout}
+              />
             </ProtectedRoute>
           }
+        />
+
+        {/* Legacy route - redirect to new route */}
+        <Route
+          path="/hostel/*"
+          element={<Navigate to="/hostel-admin" replace />}
         />
 
         {/* Catch all */}
