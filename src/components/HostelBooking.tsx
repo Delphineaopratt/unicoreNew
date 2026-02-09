@@ -20,13 +20,21 @@ import { Hostel, Booking, Notification } from "../types";
 import { getAllHostels } from "../services/hostel.service";
 import { getMyBookings, createBooking } from "../services/booking.service";
 import { toast } from "sonner";
+import { UNIVERSITIES, MAX_DISTANCE_KM } from "../constants/universities";
+import { filterHostelsByDistance } from "../utils/distance";
 // import { isAuthenticated } from "../services/auth.service";
 
 export function HostelBooking() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("explore");
-  const [selectedUniversity, setSelectedUniversity] = useState("");
+  const [selectedUniversity, setSelectedUniversity] = useState(() => {
+    // Restore from sessionStorage
+    return sessionStorage.getItem("selectedUniversity") || "";
+  });
   const [hostels, setHostels] = useState<Hostel[]>([]);
+  const [filteredHostels, setFilteredHostels] = useState<Hostel[]>([]);
+  const [showAllHostels, setShowAllHostels] = useState(false);
+  const [hostelCount, setHostelCount] = useState({ nearby: 0, total: 0 });
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +58,6 @@ export function HostelBooking() {
       const data = await getAllHostels();
       setHostels(data as Hostel[]);
       setError(null);
-      toast.success(`Loaded ${data.length} hostels`);
     } catch (err: any) {
       const errorMessage =
         err?.message || "Failed to load hostels. Please try again.";
@@ -60,6 +67,39 @@ export function HostelBooking() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Filter hostels when university selection or hostels change
+  useEffect(() => {
+    if (!selectedUniversity || hostels.length === 0) {
+      setFilteredHostels([]);
+      setHostelCount({ nearby: 0, total: hostels.length });
+      return;
+    }
+
+    const university = UNIVERSITIES.find(uni => uni.id === selectedUniversity);
+    if (!university) {
+      setFilteredHostels([]);
+      return;
+    }
+
+    // Filter hostels within MAX_DISTANCE_KM
+    const nearby = filterHostelsByDistance(
+      hostels,
+      university.coordinates.latitude,
+      university.coordinates.longitude,
+      MAX_DISTANCE_KM
+    );
+
+    setFilteredHostels(nearby);
+    setHostelCount({ nearby: nearby.length, total: hostels.length });
+    setShowAllHostels(false); // Reset when university changes
+  }, [selectedUniversity, hostels]);
+
+  // Handle university selection change
+  const handleUniversityChange = (value: string) => {
+    setSelectedUniversity(value);
+    sessionStorage.setItem("selectedUniversity", value);
   };
 
   const fetchBookings = async () => {
@@ -180,21 +220,21 @@ export function HostelBooking() {
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium mb-2">
-              Select University
+              Select University <span className="text-red-500">*</span>
             </label>
             <Select
               value={selectedUniversity}
-              onValueChange={setSelectedUniversity}
+              onValueChange={handleUniversityChange}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose University" />
+                <SelectValue placeholder="Choose Your University" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="university1">University of Ghana</SelectItem>
-                <SelectItem value="university2">KNUST</SelectItem>
-                <SelectItem value="university3">
-                  University of Cape Coast
-                </SelectItem>
+                {UNIVERSITIES.map((university) => (
+                  <SelectItem key={university.id} value={university.id}>
+                    {university.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -243,46 +283,101 @@ export function HostelBooking() {
         )}
         {!loading && !error && activeTab === "explore" && (
           <div>
-            <h2 className="text-xl font-semibold mb-6">Hostel Listings</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {hostels.map((hostel) => (
-                <div
-                  key={hostel._id}
-                  className="bg-white rounded-lg overflow-hidden shadow-sm"
-                >
-                  <div className="relative">
-                    {/* <ImageWithFallback
-                      src={hostel.photos[0] || "/placeholder-hostel.jpg"}
-                      alt={hostel.name}
-                      className="w-full h-48 object-cover"
-                    /> */}
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">
-                      {hostel.name}
-                    </h3>
-                    <div className="flex items-center text-gray-600 text-sm mb-2">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {hostel.location}
-                    </div>
-                    <div className="flex items-center text-gray-600 text-sm mb-4">
-                      <BedDouble className="w-4 h-4 mr-1" />
-                      {hostel.availableRooms} rooms available
-                    </div>
-
-                    <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                      onClick={() =>
-                        navigate(`/student/hostel-details?id=${hostel._id}`)
-                      }
-                    >
-                      View Hostel
-                    </Button>
-                  </div>
+            {!selectedUniversity ? (
+              // Force university selection
+              <div className="text-center py-12">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 max-w-md mx-auto">
+                  <MapPin className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-blue-900 mb-2">
+                    Select Your University
+                  </h3>
+                  <p className="text-blue-700 mb-4">
+                    Please select your university from the dropdown above to see hostels within {MAX_DISTANCE_KM}km radius.
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : filteredHostels.length === 0 && !showAllHostels ? (
+              // No hostels within 5km
+              <div className="text-center py-12">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 max-w-md mx-auto">
+                  <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-yellow-900 mb-2">
+                    No Hostels Found Nearby
+                  </h3>
+                  <p className="text-yellow-700 mb-4">
+                    We couldn't find any hostels within {MAX_DISTANCE_KM}km of your selected university.
+                  </p>
+                  <Button
+                    onClick={() => setShowAllHostels(true)}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                  >
+                    Show All Hostels ({hostelCount.total})
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // Display hostels
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">
+                    {showAllHostels ? `All Hostels (${hostelCount.total})` : `Hostels Near You (${hostelCount.nearby})`}
+                  </h2>
+                  {showAllHostels && hostelCount.nearby > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAllHostels(false)}
+                      className="text-sm"
+                    >
+                      Show Only Nearby ({hostelCount.nearby})
+                    </Button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {(showAllHostels ? hostels : filteredHostels).map((hostel: any) => (
+                    <div
+                      key={hostel._id}
+                      className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="relative">
+                        {/* <ImageWithFallback
+                          src={hostel.photos[0] || "/placeholder-hostel.jpg"}
+                          alt={hostel.name}
+                          className="w-full h-48 object-cover"
+                        /> */}
+                        {hostel.distance && (
+                          <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            {hostel.distance}km away
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg mb-2">
+                          {hostel.name}
+                        </h3>
+                        <div className="flex items-center text-gray-600 text-sm mb-2">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {hostel.location}
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm mb-4">
+                          <BedDouble className="w-4 h-4 mr-1" />
+                          {hostel.availableRooms} rooms available
+                        </div>
+
+                        <Button
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                          onClick={() =>
+                            navigate(`/student/hostel-details?id=${hostel._id}`)
+                          }
+                        >
+                          View Hostel
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

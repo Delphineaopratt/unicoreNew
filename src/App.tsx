@@ -607,8 +607,20 @@ export default function App() {
   const handleOnboardingComplete = async (data: UserProfile) => {
     try {
       console.log("Onboarding completed:", data);
+      
+      // Save to user profile
       const { completeOnboarding } = await import("./services/user.service");
       await completeOnboarding(data);
+
+      // Save to job preferences
+      const { saveJobPreferences } = await import("./services/jobPreference.service");
+      await saveJobPreferences({
+        program: data.program,
+        cgpa: data.cgpa,
+        jobTypes: data.jobTypes,
+        skills: data.skills,
+        interests: data.interests,
+      });
 
       // Re-fetch user profile to get updated data from server
       const { getCurrentUser } = await import("./services/user.service");

@@ -42,6 +42,8 @@ interface JobsPageProps {
 export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
   const [activeTab, setActiveTab] = useState("featured");
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
+  const [hasPreferences, setHasPreferences] = useState(false);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [jobNotifications, setJobNotifications] = useState<JobNotification[]>(
     []
@@ -97,7 +99,43 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
       }
     };
 
+    const fetchRecommendedJobs = async () => {
+      try {
+        const { getRecommendedJobs, getJobPreferences } = await import(
+          "../services/jobPreference.service"
+        );
+        
+        // Check if user has preferences
+        const preferences = await getJobPreferences();
+        if (preferences) {
+          setHasPreferences(true);
+          // Fetch recommended jobs
+          const recommended = await getRecommendedJobs();
+          if (recommended && recommended.length > 0) {
+            const transformedJobs = recommended.map((job: any) => ({
+              id: job._id,
+              title: job.title,
+              company: job.company,
+              location: job.location,
+              type: job.type,
+              minSalary: job.salary?.min?.toString() || "0",
+              maxSalary: job.salary?.max?.toString() || "0",
+              description: job.description,
+              requirements: Array.isArray(job.requirements)
+                ? job.requirements.join(", ")
+                : job.requirements || "",
+              matchScore: job.matchScore || 0,
+            }));
+            setRecommendedJobs(transformedJobs);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching recommended jobs:", error);
+      }
+    };
+
     fetchJobs();
+    fetchRecommendedJobs();
   }, []);
 
   // Fetch applications and notifications
@@ -189,6 +227,64 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
 
       {/* Tabs Section */}
       <div className="p-6">
+        {/* Recommended Jobs Section */}
+        {hasPreferences && recommendedJobs.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Recommended for You
+              </h2>
+              <span className="text-sm text-gray-500">
+                Based on your preferences
+              </span>
+            </div>
+            <div className="grid gap-4">
+              {recommendedJobs.slice(0, 3).map((job) => (
+                <div
+                  key={job.id}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                        {job.title}
+                      </h3>
+                      <p className="text-gray-600 mb-2">{job.company}</p>
+                      <div className="flex gap-3 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          📍 {job.location}
+                        </span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                          {job.type}
+                        </span>
+                      </div>
+                    </div>
+                    {job.matchScore && job.matchScore > 0 && (
+                      <div className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                        ✓ {job.matchScore > 5 ? "Great" : "Good"} Match
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                    {job.description}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-blue-600">
+                      GHS {job.minSalary} - {job.maxSalary}
+                    </span>
+                    <Button
+                      onClick={() => onApplyToJob(job)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Apply Now
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger
