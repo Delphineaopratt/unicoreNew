@@ -48,6 +48,9 @@ interface UserProfile {
   location?: string;
   bio?: string;
   profilePicture?: string;
+  school?: string;
+  schoolAddress?: string;
+  schoolEmail?: string;
 }
 
 interface UnibotChatProps {
@@ -168,9 +171,11 @@ export function UnibotChat({ userProfile }: UnibotChatProps) {
           `• Phone: ${userProfile?.phone || "[Your Phone]"}\n` +
           `• Location: ${userProfile?.location || "[Your Location]"}\n\n` +
           "**EDUCATION**\n" +
+          `• School: ${userProfile?.school || "[Your School]"}\n` +
           `• Program: ${userProfile?.program || "[Your Program]"}\n` +
-          `• CGPA: ${userProfile?.cgpa || "[Your CGPA]"}\n\n` +
-          "**SKILLS**\n" +
+          `• CGPA: ${userProfile?.cgpa || "[Your CGPA]"}\n` +
+          (userProfile?.schoolEmail ? `• School Email: ${userProfile.schoolEmail}\n` : "") +
+          "\n**SKILLS**\n" +
           `• ${userProfile?.skills?.join("\n• ") || "Technical Skills\n• Soft Skills\n• Languages"}\n\n` +
           "**INTERESTS**\n" +
           `• ${userProfile?.interests?.join("\n• ") || "Professional Interests"}\n\n` +

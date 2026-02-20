@@ -7,6 +7,8 @@ import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { Edit, Camera, Upload, Save, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { updateSchoolInfo } from '../services/school.service';
 // import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface UserProfile {
@@ -22,6 +24,9 @@ interface UserProfile {
   location?: string;
   bio?: string;
   profilePicture?: string;
+  school?: string;
+  schoolAddress?: string;
+  schoolEmail?: string;
 }
 
 interface MyProfileProps {
@@ -38,7 +43,10 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
       jobTypes: [],
       skills: [],
       interests: [],
-      transcript: null
+      transcript: null,
+      school: '',
+      schoolAddress: '',
+      schoolEmail: ''
     }
   );
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
@@ -56,10 +64,26 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
     setEditedProfile({ ...userProfile! });
   };
 
-  const handleSaveClick = () => {
-    onUpdateProfile(editedProfile);
-    setIsEditing(false);
-    setProfilePicturePreview(null);
+  const handleSaveClick = async () => {
+    try {
+      // Save school information if provided
+      if (editedProfile.school) {
+        await updateSchoolInfo({
+          name: editedProfile.school,
+          address: editedProfile.schoolAddress,
+          email: editedProfile.schoolEmail
+        });
+        toast.success('School information saved');
+      }
+      
+      // Call the parent update handler for other profile fields
+      onUpdateProfile(editedProfile);
+      setIsEditing(false);
+      setProfilePicturePreview(null);
+    } catch (error) {
+      console.error('Error saving school information:', error);
+      toast.error('Failed to save school information');
+    }
   };
 
   const handleCancelEdit = () => {
@@ -280,6 +304,51 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                       />
                     ) : (
                       <p className="p-3 bg-gray-50 rounded-lg">{userProfile.cgpa}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* School Information */}
+                <div className="space-y-4 mt-6 pt-6 border-t">
+                  <h3 className="font-semibold text-md">School Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm mb-2">School Name</label>
+                      {isEditing ? (
+                        <Input
+                          value={editedProfile.school || ''}
+                          onChange={(e) => setEditedProfile(prev => ({ ...prev, school: e.target.value }))}
+                          placeholder="e.g., University of Example"
+                        />
+                      ) : (
+                        <p className="p-3 bg-gray-50 rounded-lg">{userProfile.school || 'Not provided'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-2">School Email</label>
+                      {isEditing ? (
+                        <Input
+                          type="email"
+                          value={editedProfile.schoolEmail || ''}
+                          onChange={(e) => setEditedProfile(prev => ({ ...prev, schoolEmail: e.target.value }))}
+                          placeholder="e.g., info@school.edu"
+                        />
+                      ) : (
+                        <p className="p-3 bg-gray-50 rounded-lg">{userProfile.schoolEmail || 'Not provided'}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-2">School Address</label>
+                    {isEditing ? (
+                      <Textarea
+                        value={editedProfile.schoolAddress || ''}
+                        onChange={(e) => setEditedProfile(prev => ({ ...prev, schoolAddress: e.target.value }))}
+                        placeholder="e.g., 123 Campus Drive, City, State, ZIP"
+                        rows={3}
+                      />
+                    ) : (
+                      <p className="p-3 bg-gray-50 rounded-lg">{userProfile.schoolAddress || 'Not provided'}</p>
                     )}
                   </div>
                 </div>

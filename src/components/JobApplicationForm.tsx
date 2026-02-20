@@ -70,11 +70,13 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
   const [address, setAddress] = useState("");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [resume, setResume] = useState<File | null>(null);
+  const [transcript, setTranscript] = useState<File | null>(null);
   const [coverLetter, setCoverLetter] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addressError, setAddressError] = useState("");
   const [resumeError, setResumeError] = useState("");
+  const [transcriptError, setTranscriptError] = useState("");
   const [coverLetterError, setCoverLetterError] = useState("");
 
   // Form validation state
@@ -143,6 +145,28 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
     }
   };
 
+  const handleTranscriptUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const validation = validateFile(file, {
+        maxSizeMB: 5,
+        allowedTypes: [".pdf", ".doc", ".docx"],
+        required: false,
+      });
+
+      if (!validation.isValid) {
+        setTranscriptError(validation.error || "");
+        setTranscript(null);
+        toast.error(validation.error);
+        return;
+      }
+
+      setTranscript(file);
+      setTranscriptError("");
+      toast.success("Transcript uploaded successfully");
+    }
+  };
+
   const handleAddressChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setAddress(value);
@@ -187,6 +211,7 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
     // Reset errors
     setAddressError("");
     setResumeError("");
+    setTranscriptError("");
     setCoverLetterError("");
 
     // Validate all fields
@@ -229,6 +254,9 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
       formData.append("address", address);
       if (resume) {
         formData.append("resume", resume);
+      }
+      if (transcript) {
+        formData.append("transcript", transcript);
       }
 
       const response = await applyForJob(job.id.toString(), formData);
@@ -573,6 +601,66 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
                             <AlertCircle className="w-4 h-4 text-red-600" />
                             <p className="text-sm text-red-700">
                               {resumeError}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Transcript Upload */}
+                  <div>
+                    <label className="block text-sm mb-2">
+                      Transcript <span className="text-gray-500 text-xs">(Optional)</span>
+                    </label>
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-gray-400 transition-colors ${
+                        transcriptError
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 mb-2">
+                        Upload your academic transcript
+                      </p>
+                      <p className="text-sm text-gray-500 mb-3">
+                        Accepted file types: PDF, DOC, DOCX. Max file size: 5MB.
+                      </p>
+                      <input
+                        type="file"
+                        onChange={handleTranscriptUpload}
+                        accept=".pdf,.doc,.docx"
+                        className="hidden"
+                        id="transcript-upload"
+                      />
+                      <label
+                        htmlFor="transcript-upload"
+                        className="inline-block px-4 py-2 bg-blue-50 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+                      >
+                        Browse Files
+                      </label>
+
+                      {transcript && !transcriptError && (
+                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center justify-center gap-2">
+                            <FileText className="w-4 h-4 text-green-600" />
+                            <p className="text-sm text-green-700">
+                              ✓ {transcript.name}
+                            </p>
+                            <span className="text-xs text-gray-500">
+                              ({(transcript.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {transcriptError && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center justify-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-600" />
+                            <p className="text-sm text-red-700">
+                              {transcriptError}
                             </p>
                           </div>
                         </div>

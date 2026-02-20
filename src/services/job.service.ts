@@ -82,6 +82,16 @@ export const getEmployerApplications = async () => {
   return response.data;
 };
 
+export const getShortlistedCandidates = async () => {
+  const response = await api.get('/jobs/candidates/shortlisted');
+  return response.data;
+};
+
+export const verifyTranscript = async (applicationId: string) => {
+  const response = await api.post(`/jobs/applications/${applicationId}/verify-transcript`);
+  return response.data;
+};
+
 // Notification services
 export const getNotifications = async () => {
   const response = await api.get('/jobs/notifications');

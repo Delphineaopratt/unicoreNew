@@ -8,6 +8,11 @@ export interface User {
   location?: string;
   bio?: string;
   skills?: string[];
+  program?: string;
+  cgpa?: string;
+  school?: string;
+  schoolAddress?: string;
+  schoolEmail?: string;
   experience?: {
     title: string;
     company: string;
@@ -36,6 +41,9 @@ export interface UserProfile {
   location?: string;
   bio?: string;
   profilePicture?: string;
+  school?: string;
+  schoolAddress?: string;
+  schoolEmail?: string;
 }
 
 // Hostel types
@@ -105,7 +113,8 @@ export interface Job {
 }
 
 export interface JobApplication {
-  id: string;
+  _id?: string;
+  id?: string;
   student?: string | User;
   job?: string | Job;
   jobTitle?: string;
@@ -114,6 +123,10 @@ export interface JobApplication {
   coverLetter?: string;
   address?: string;
   resume?: {
+    url: string;
+    filename: string;
+  };
+  transcript?: {
     url: string;
     filename: string;
   };
