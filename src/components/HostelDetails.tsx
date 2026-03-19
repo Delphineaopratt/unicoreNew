@@ -98,6 +98,19 @@ export function HostelDetails({
     }
   };
 
+  const getUserEmail = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.email || '';
+      }
+    } catch (err) {
+      console.error('Error getting user email:', err);
+    }
+    return '';
+  };
+
   const handleConfirmBooking = async () => {
     if (!selectedRoom || !hostel) return;
 
@@ -237,15 +250,14 @@ export function HostelDetails({
                         alt={room.name}
                         className="w-full h-full object-cover"
                         onError={(e: any) => {
-                          e.target.src =
-                            "https://via.placeholder.com/300x200?text=Room+Photo";
+                          e.target.style.display = "none";
+                          e.target.nextElementSibling?.style.removeProperty("display");
                         }}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BedDouble className="w-12 h-12 text-gray-400" />
-                      </div>
-                    )}
+                    ) : null}
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200" style={{display: room.photos && room.photos.length > 0 ? "none" : "flex"}}>
+                      <BedDouble className="w-12 h-12 text-gray-400" />
+                    </div>
                     {/* Slide indicators */}
                     {room.photos && room.photos.length > 0 && (
                       <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
@@ -320,6 +332,8 @@ export function HostelDetails({
         onConfirm={handleConfirmBooking}
         room={selectedRoom}
         hostelName={hostel?.name || "Hostel"}
+        hostelId={hostelId}
+        studentEmail={getUserEmail()}
       />
     </div>
   );
