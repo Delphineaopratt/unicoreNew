@@ -174,7 +174,9 @@ export function UnibotChat({ userProfile }: UnibotChatProps) {
           `• School: ${userProfile?.school || "[Your School]"}\n` +
           `• Program: ${userProfile?.program || "[Your Program]"}\n` +
           `• CGPA: ${userProfile?.cgpa || "[Your CGPA]"}\n` +
-          (userProfile?.schoolEmail ? `• School Email: ${userProfile.schoolEmail}\n` : "") +
+          (userProfile?.schoolEmail
+            ? `• School Email: ${userProfile.schoolEmail}\n`
+            : "") +
           "\n**SKILLS**\n" +
           `• ${userProfile?.skills?.join("\n• ") || "Technical Skills\n• Soft Skills\n• Languages"}\n\n` +
           "**INTERESTS**\n" +

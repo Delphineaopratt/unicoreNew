@@ -88,7 +88,7 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
       coverLetter.trim().length >= 100 &&
       !addressError &&
       !coverLetterError,
-    [address, resume, resumeError, coverLetter, addressError, coverLetterError]
+    [address, resume, resumeError, coverLetter, addressError, coverLetterError],
   );
 
   // Load user profile on component mount
@@ -145,7 +145,9 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
     }
   };
 
-  const handleTranscriptUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTranscriptUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       const validation = validateFile(file, {
@@ -185,7 +187,7 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
   };
 
   const handleCoverLetterChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
     const value = e.target.value;
     setCoverLetter(value);
@@ -198,7 +200,7 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
     // Check minimum length
     if (value.trim().length > 0 && value.trim().length < 100) {
       setCoverLetterError(
-        "Cover letter should be at least 100 characters (recommended 300-500 words)"
+        "Cover letter should be at least 100 characters (recommended 300-500 words)",
       );
     } else if (value.trim().length >= 100) {
       setCoverLetterError("");
@@ -273,7 +275,7 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
       console.error("Error submitting application:", error);
       toast.error(
         error.response?.data?.message ||
-          "Failed to submit application. Please try again."
+          "Failed to submit application. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -295,7 +297,7 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
   };
 
   const getTranscriptName = (
-    transcript: File | { url?: string; filename?: string } | null
+    transcript: File | { url?: string; filename?: string } | null,
   ) => {
     if (!transcript) return null;
     if (transcript instanceof File) {
@@ -611,7 +613,8 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
                   {/* Transcript Upload */}
                   <div>
                     <label className="block text-sm mb-2">
-                      Transcript <span className="text-gray-500 text-xs">(Optional)</span>
+                      Transcript{" "}
+                      <span className="text-gray-500 text-xs">(Optional)</span>
                     </label>
                     <div
                       className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-gray-400 transition-colors ${
@@ -692,8 +695,8 @@ export function JobApplicationForm({ job }: JobApplicationFormProps) {
                         coverLetter.length < 100
                           ? "text-red-500"
                           : coverLetter.length < 300
-                          ? "text-yellow-600"
-                          : "text-green-600"
+                            ? "text-yellow-600"
+                            : "text-green-600"
                       }`}
                     >
                       {coverLetter.length} / 2000 characters

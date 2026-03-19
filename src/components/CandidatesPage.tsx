@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { toast } from 'sonner';
-import { getShortlistedCandidates } from '../services/job.service';
-import { JobApplication } from '../types';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { toast } from "sonner";
+import { getShortlistedCandidates } from "../services/job.service";
+import { JobApplication } from "../types";
 
 interface Candidate extends JobApplication {
   student: {
@@ -58,8 +58,8 @@ export function CandidatesPage() {
       <div className="bg-white border-b border-gray-200 px-8 py-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/employer/dashboard')} 
+            <button
+              onClick={() => navigate("/employer/dashboard")}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft size={20} />
@@ -94,13 +94,13 @@ export function CandidatesPage() {
                         <div className="flex-shrink-0">
                           <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
                             <span className="text-white font-bold text-lg">
-                              {candidate.student.name?.charAt(0) || 'U'}
+                              {candidate.student.name?.charAt(0) || "U"}
                             </span>
                           </div>
                         </div>
                         <div className="min-w-0">
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {candidate.student.name || 'Unknown'}
+                            {candidate.student.name || "Unknown"}
                           </h3>
                           <p className="text-gray-600 text-sm">
                             Applied for: {candidate.job.title}
@@ -133,21 +133,25 @@ export function CandidatesPage() {
                         {/* View Documents */}
                         <div className="flex gap-2 flex-wrap">
                           {candidate.resume && candidate.resume.url && (
-                            <Button 
-                              variant="default" 
+                            <Button
+                              variant="default"
                               size="sm"
                               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 font-medium text-xs"
-                              onClick={() => window.open(candidate.resume.url, '_blank')}
+                              onClick={() =>
+                                window.open(candidate.resume.url, "_blank")
+                              }
                             >
                               View Resume
                             </Button>
                           )}
                           {candidate.transcript && candidate.transcript.url && (
-                            <Button 
-                              variant="default" 
+                            <Button
+                              variant="default"
                               size="sm"
                               className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 font-medium text-xs"
-                              onClick={() => window.open(candidate.transcript.url, '_blank')}
+                              onClick={() =>
+                                window.open(candidate.transcript.url, "_blank")
+                              }
                             >
                               View Transcript
                             </Button>
@@ -155,11 +159,13 @@ export function CandidatesPage() {
                         </div>
 
                         {/* Contact Button */}
-                        <Button 
-                          variant="default" 
+                        <Button
+                          variant="default"
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 font-medium whitespace-nowrap"
-                          onClick={() => toast.info(`Email: ${candidate.student.email}`)}
+                          onClick={() =>
+                            toast.info(`Email: ${candidate.student.email}`)
+                          }
                         >
                           Contact
                         </Button>

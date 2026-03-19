@@ -10,9 +10,14 @@ export interface User {
   skills?: string[];
   program?: string;
   cgpa?: string;
-  school?: string;
-  schoolAddress?: string;
-  schoolEmail?: string;
+  studentId?: string;
+  school?: {
+    _id: string;
+    name: string;
+    email?: string;
+    address?: string;
+  };
+  phone?: string;
   experience?: {
     title: string;
     company: string;
@@ -31,6 +36,7 @@ export interface User {
 export interface UserProfile {
   program?: string;
   cgpa?: string;
+  studentId?: string;
   jobTypes?: string[];
   skills?: string[];
   interests?: string[];
@@ -41,9 +47,12 @@ export interface UserProfile {
   location?: string;
   bio?: string;
   profilePicture?: string;
-  school?: string;
-  schoolAddress?: string;
-  schoolEmail?: string;
+  school?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    address?: string;
+  };
 }
 
 // Hostel types
@@ -131,6 +140,13 @@ export interface JobApplication {
     filename: string;
   };
   status?: 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'accepted';
+  transcriptVerificationStatus?: 'not_requested' | 'pending' | 'verified' | 'discrepancy' | 'denied';
+  transcriptVerificationRequestSentAt?: string;
+  transcriptVerificationResponse?: {
+    status: 'confirmation' | 'discrepancy' | 'denial';
+    message?: string;
+    respondedAt?: string;
+  };
   employerNotes?: string;
   createdAt?: string;
 }

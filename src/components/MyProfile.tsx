@@ -1,32 +1,42 @@
-import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
-import { Edit, Camera, Upload, Save, X } from 'lucide-react';
-import { toast } from 'sonner';
-import { updateSchoolInfo } from '../services/school.service';
+import React, { useState } from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { Edit, Camera, Upload, Save, X, Mail, Check } from "lucide-react";
+import { toast } from "sonner";
+import { updateSchoolInfo } from "../services/school.service";
 // import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface UserProfile {
   program: string;
   cgpa: string;
+  studentId: string;
   jobTypes: string[];
   skills: string[];
   interests: string[];
-  transcript: File | { url?: string; filename?: string; } | null;
+  transcript: File | { url?: string; filename?: string } | null;
   name?: string;
   email?: string;
   phone?: string;
   location?: string;
   bio?: string;
   profilePicture?: string;
-  school?: string;
-  schoolAddress?: string;
-  schoolEmail?: string;
+  school?: {
+    name: string;
+    address: string;
+    email: string;
+  };
 }
 
 interface MyProfileProps {
@@ -38,20 +48,30 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile>(
     userProfile || {
-      program: '',
-      cgpa: '',
+      program: "",
+      cgpa: "",
+      studentId: "",
       jobTypes: [],
       skills: [],
       interests: [],
       transcript: null,
-      school: '',
-      schoolAddress: '',
-      schoolEmail: ''
-    }
+      name: "",
+      email: "",
+      phone: "",
+      school: {
+        name: "",
+        address: "",
+        email: "",
+      },
+    },
   );
-  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState<
+    string | null
+  >(null);
 
-  const getTranscriptName = (transcript: File | { url?: string; filename?: string; } | null) => {
+  const getTranscriptName = (
+    transcript: File | { url?: string; filename?: string } | null,
+  ) => {
     if (!transcript) return null;
     if (transcript instanceof File) {
       return transcript.name;
@@ -67,22 +87,22 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
   const handleSaveClick = async () => {
     try {
       // Save school information if provided
-      if (editedProfile.school) {
+      if (editedProfile.school && editedProfile.school.name) {
         await updateSchoolInfo({
-          name: editedProfile.school,
-          address: editedProfile.schoolAddress,
-          email: editedProfile.schoolEmail
+          name: editedProfile.school.name,
+          address: editedProfile.school.address || "",
+          email: editedProfile.school.email || "",
         });
-        toast.success('School information saved');
+        toast.success("School information saved successfully");
       }
-      
+
       // Call the parent update handler for other profile fields
       onUpdateProfile(editedProfile);
       setIsEditing(false);
       setProfilePicturePreview(null);
     } catch (error) {
-      console.error('Error saving school information:', error);
-      toast.error('Failed to save school information');
+      console.error("Error saving school information:", error);
+      toast.error("Failed to save school information");
     }
   };
 
@@ -92,68 +112,94 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
     setProfilePicturePreview(null);
   };
 
-  const handleProfilePictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePictureUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
         setProfilePicturePreview(result);
-        setEditedProfile(prev => ({ ...prev, profilePicture: result }));
+        setEditedProfile((prev) => ({ ...prev, profilePicture: result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleTranscriptUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTranscriptUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
-      setEditedProfile(prev => ({ ...prev, transcript: file }));
+      setEditedProfile((prev) => ({ ...prev, transcript: file }));
     }
   };
 
   const toggleJobType = (jobType: string) => {
-    setEditedProfile(prev => ({
+    setEditedProfile((prev) => ({
       ...prev,
       jobTypes: prev.jobTypes.includes(jobType)
-        ? prev.jobTypes.filter(type => type !== jobType)
-        : [...prev.jobTypes, jobType]
+        ? prev.jobTypes.filter((type) => type !== jobType)
+        : [...prev.jobTypes, jobType],
     }));
   };
 
   const toggleSkill = (skill: string) => {
-    setEditedProfile(prev => ({
+    setEditedProfile((prev) => ({
       ...prev,
       skills: prev.skills.includes(skill)
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill]
+        ? prev.skills.filter((s) => s !== skill)
+        : [...prev.skills, skill],
     }));
   };
 
   const toggleInterest = (interest: string) => {
-    setEditedProfile(prev => ({
+    setEditedProfile((prev) => ({
       ...prev,
       interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
+        ? prev.interests.filter((i) => i !== interest)
+        : [...prev.interests, interest],
     }));
   };
 
   const availableJobTypes = [
-    'Software Engineering', 'Data Science', 'Marketing Specialist', 'Financial Analyst',
-    'UI/UX Designer', 'Healthcare Professional', 'Educator', 'Environmental Scientist'
+    "Software Engineering",
+    "Data Science",
+    "Marketing Specialist",
+    "Financial Analyst",
+    "UI/UX Designer",
+    "Healthcare Professional",
+    "Educator",
+    "Environmental Scientist",
   ];
 
   const availableSkills = [
-    'Programming', 'Data Analysis', 'Project Management', 'Communication',
-    'Problem-Solving', 'Critical Thinking', 'Leadership', 'Teamwork',
-    'Research', 'Financial Modeling', 'Digital Marketing'
+    "Programming",
+    "Data Analysis",
+    "Project Management",
+    "Communication",
+    "Problem-Solving",
+    "Critical Thinking",
+    "Leadership",
+    "Teamwork",
+    "Research",
+    "Financial Modeling",
+    "Digital Marketing",
   ];
 
   const availableInterests = [
-    'Technology', 'Arts & Culture', 'Environmentalism', 'Volunteering',
-    'Sports', 'Gaming', 'Reading', 'Travel', 'Cooking', 'Photography',
-    'Music Production'
+    "Technology",
+    "Arts & Culture",
+    "Environmentalism",
+    "Volunteering",
+    "Sports",
+    "Gaming",
+    "Reading",
+    "Travel",
+    "Cooking",
+    "Photography",
+    "Music Production",
   ];
 
   if (!userProfile) {
@@ -162,7 +208,10 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
             <h1 className="text-2xl mb-4">Complete Your Profile</h1>
-            <p className="text-gray-600 mb-6">Personalize your job feed under Jobs & Internships and complete the onboarding process to set up your profile.</p>
+            <p className="text-gray-600 mb-6">
+              Personalize your job feed under Jobs & Internships and complete
+              the onboarding process to set up your profile.
+            </p>
           </div>
         </div>
       </div>
@@ -170,8 +219,12 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
   }
 
   const getInitials = (name?: string) => {
-    if (!name) return 'UN';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (!name) return "UN";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
 
   return (
@@ -181,20 +234,32 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl mb-2">My Profile</h1>
-            <p className="text-gray-600">Manage your personal information and preferences</p>
+            <p className="text-gray-600">
+              Manage your personal information and preferences
+            </p>
           </div>
           {!isEditing ? (
-            <Button onClick={handleEditClick} className="flex items-center gap-2">
+            <Button
+              onClick={handleEditClick}
+              className="flex items-center gap-2"
+            >
               <Edit className="w-4 h-4" />
               Edit Profile
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleCancelEdit} className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={handleCancelEdit}
+                className="flex items-center gap-2"
+              >
                 <X className="w-4 h-4" />
                 Cancel
               </Button>
-              <Button onClick={handleSaveClick} className="flex items-center gap-2">
+              <Button
+                onClick={handleSaveClick}
+                className="flex items-center gap-2"
+              >
                 <Save className="w-4 h-4" />
                 Save Changes
               </Button>
@@ -212,9 +277,11 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
               <CardContent className="text-center">
                 <div className="relative inline-block mb-4">
                   <Avatar className="w-32 h-32">
-                    <AvatarImage 
-                      src={profilePicturePreview || editedProfile.profilePicture} 
-                      alt="Profile picture" 
+                    <AvatarImage
+                      src={
+                        profilePicturePreview || editedProfile.profilePicture
+                      }
+                      alt="Profile picture"
                     />
                     <AvatarFallback className="text-2xl">
                       {getInitials(editedProfile.name)}
@@ -232,38 +299,66 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                     </label>
                   )}
                 </div>
-                
+
                 <div className="space-y-4">
                   {isEditing ? (
                     <>
                       <Input
                         placeholder="Full Name"
-                        value={editedProfile.name || ''}
-                        onChange={(e) => setEditedProfile(prev => ({ ...prev, name: e.target.value }))}
+                        value={editedProfile.name || ""}
+                        onChange={(e) =>
+                          setEditedProfile((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
                       />
                       <Input
                         placeholder="Email"
                         type="email"
-                        value={editedProfile.email || ''}
-                        onChange={(e) => setEditedProfile(prev => ({ ...prev, email: e.target.value }))}
+                        value={editedProfile.email || ""}
+                        onChange={(e) =>
+                          setEditedProfile((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
                       />
                       <Input
                         placeholder="Phone"
-                        value={editedProfile.phone || ''}
-                        onChange={(e) => setEditedProfile(prev => ({ ...prev, phone: e.target.value }))}
+                        value={editedProfile.phone || ""}
+                        onChange={(e) =>
+                          setEditedProfile((prev) => ({
+                            ...prev,
+                            phone: e.target.value,
+                          }))
+                        }
                       />
                       <Input
                         placeholder="Location"
-                        value={editedProfile.location || ''}
-                        onChange={(e) => setEditedProfile(prev => ({ ...prev, location: e.target.value }))}
+                        value={editedProfile.location || ""}
+                        onChange={(e) =>
+                          setEditedProfile((prev) => ({
+                            ...prev,
+                            location: e.target.value,
+                          }))
+                        }
                       />
                     </>
                   ) : (
                     <>
-                      <h3 className="font-semibold">{userProfile.name || 'Student'}</h3>
-                      {userProfile.email && <p className="text-gray-600">{userProfile.email}</p>}
-                      {userProfile.phone && <p className="text-gray-600">{userProfile.phone}</p>}
-                      {userProfile.location && <p className="text-gray-600">{userProfile.location}</p>}
+                      <h3 className="font-semibold">
+                        {userProfile.name || "Student"}
+                      </h3>
+                      {userProfile.email && (
+                        <p className="text-gray-600">{userProfile.email}</p>
+                      )}
+                      {userProfile.phone && (
+                        <p className="text-gray-600">{userProfile.phone}</p>
+                      )}
+                      {userProfile.location && (
+                        <p className="text-gray-600">{userProfile.location}</p>
+                      )}
                     </>
                   )}
                 </div>
@@ -281,14 +376,44 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm mb-2">Program of Study</label>
+                    <label className="block text-sm mb-2">
+                      Program of Study
+                    </label>
                     {isEditing ? (
                       <Input
                         value={editedProfile.program}
-                        onChange={(e) => setEditedProfile(prev => ({ ...prev, program: e.target.value }))}
+                        onChange={(e) =>
+                          setEditedProfile((prev) => ({
+                            ...prev,
+                            program: e.target.value,
+                          }))
+                        }
                       />
                     ) : (
-                      <p className="p-3 bg-gray-50 rounded-lg">{userProfile.program}</p>
+                      <p className="p-3 bg-gray-50 rounded-lg">
+                        {userProfile.program}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-2">
+                      Student ID Number
+                    </label>
+                    {isEditing ? (
+                      <Input
+                        value={editedProfile.studentId}
+                        onChange={(e) =>
+                          setEditedProfile((prev) => ({
+                            ...prev,
+                            studentId: e.target.value,
+                          }))
+                        }
+                        placeholder="e.g., GHS-2024-001234"
+                      />
+                    ) : (
+                      <p className="p-3 bg-gray-50 rounded-lg">
+                        {userProfile.studentId || "Not provided"}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -300,10 +425,17 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                         max="4"
                         step="0.01"
                         value={editedProfile.cgpa}
-                        onChange={(e) => setEditedProfile(prev => ({ ...prev, cgpa: e.target.value }))}
+                        onChange={(e) =>
+                          setEditedProfile((prev) => ({
+                            ...prev,
+                            cgpa: e.target.value,
+                          }))
+                        }
                       />
                     ) : (
-                      <p className="p-3 bg-gray-50 rounded-lg">{userProfile.cgpa}</p>
+                      <p className="p-3 bg-gray-50 rounded-lg">
+                        {userProfile.cgpa}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -316,12 +448,19 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                       <label className="block text-sm mb-2">School Name</label>
                       {isEditing ? (
                         <Input
-                          value={editedProfile.school || ''}
-                          onChange={(e) => setEditedProfile(prev => ({ ...prev, school: e.target.value }))}
+                          value={editedProfile.school?.name || ""}
+                          onChange={(e) =>
+                            setEditedProfile((prev) => ({
+                              ...prev,
+                              school: { ...prev.school, name: e.target.value },
+                            }))
+                          }
                           placeholder="e.g., University of Example"
                         />
                       ) : (
-                        <p className="p-3 bg-gray-50 rounded-lg">{userProfile.school || 'Not provided'}</p>
+                        <p className="p-3 bg-gray-50 rounded-lg">
+                          {userProfile.school?.name || "Not provided"}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -329,12 +468,19 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                       {isEditing ? (
                         <Input
                           type="email"
-                          value={editedProfile.schoolEmail || ''}
-                          onChange={(e) => setEditedProfile(prev => ({ ...prev, schoolEmail: e.target.value }))}
+                          value={editedProfile.school?.email || ""}
+                          onChange={(e) =>
+                            setEditedProfile((prev) => ({
+                              ...prev,
+                              school: { ...prev.school, email: e.target.value },
+                            }))
+                          }
                           placeholder="e.g., info@school.edu"
                         />
                       ) : (
-                        <p className="p-3 bg-gray-50 rounded-lg">{userProfile.schoolEmail || 'Not provided'}</p>
+                        <p className="p-3 bg-gray-50 rounded-lg">
+                          {userProfile.school?.email || "Not provided"}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -342,24 +488,43 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                     <label className="block text-sm mb-2">School Address</label>
                     {isEditing ? (
                       <Textarea
-                        value={editedProfile.schoolAddress || ''}
-                        onChange={(e) => setEditedProfile(prev => ({ ...prev, schoolAddress: e.target.value }))}
+                        value={editedProfile.school?.address || ""}
+                        onChange={(e) =>
+                          setEditedProfile((prev) => ({
+                            ...prev,
+                            school: { ...prev.school, address: e.target.value },
+                          }))
+                        }
                         placeholder="e.g., 123 Campus Drive, City, State, ZIP"
                         rows={3}
                       />
                     ) : (
-                      <p className="p-3 bg-gray-50 rounded-lg">{userProfile.schoolAddress || 'Not provided'}</p>
+                      <p className="p-3 bg-gray-50 rounded-lg">
+                        {userProfile.schoolAddress || "Not provided"}
+                      </p>
                     )}
                   </div>
                 </div>
-                
+
                 {/* Transcript */}
                 <div>
-                  <label className="block text-sm mb-2">Academic Transcript</label>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-sm font-medium">
+                      Academic Transcript
+                    </label>
+                    {!isEditing && userProfile.transcript && (
+                      <div className="text-sm text-green-600 flex items-center gap-2">
+                        <Check size={16} />
+                        Transcript uploaded
+                      </div>
+                    )}
+                  </div>
                   {isEditing ? (
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-2">Upload new transcript</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Upload new transcript
+                      </p>
                       <input
                         type="file"
                         accept=".pdf,.docx,.jpeg,.jpg"
@@ -367,22 +532,38 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                         className="hidden"
                         id="transcript-upload"
                       />
-                      <label 
+                      <label
                         htmlFor="transcript-upload"
                         className="inline-block px-4 py-2 bg-blue-50 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-100"
                       >
                         Browse Files
                       </label>
                       {editedProfile.transcript && (
-                        <p className="text-sm text-green-600 mt-2">✓ {getTranscriptName(editedProfile.transcript)}</p>
+                        <p className="text-sm text-green-600 mt-2">
+                          ✓ {getTranscriptName(editedProfile.transcript)}
+                        </p>
                       )}
                     </div>
                   ) : (
                     <div className="p-3 bg-gray-50 rounded-lg">
                       {userProfile.transcript ? (
-                        <p className="text-sm">✓ Transcript uploaded: {getTranscriptName(userProfile.transcript)}</p>
+                        <div className="space-y-2">
+                          <p className="text-sm">
+                            ✓ Transcript uploaded:{" "}
+                            {getTranscriptName(userProfile.transcript)}
+                          </p>
+                          {!userProfile.school?.email ||
+                          !userProfile.studentId ? (
+                            <p className="text-xs text-amber-600">
+                              💡 Complete your School Information and Student ID
+                              to verify with your school
+                            </p>
+                          ) : null}
+                        </div>
                       ) : (
-                        <p className="text-sm text-gray-500">No transcript uploaded</p>
+                        <p className="text-sm text-gray-500">
+                          No transcript uploaded
+                        </p>
                       )}
                     </div>
                   )}
@@ -399,13 +580,19 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                 {isEditing ? (
                   <Textarea
                     placeholder="Tell us about yourself, your goals, and what you're passionate about..."
-                    value={editedProfile.bio || ''}
-                    onChange={(e) => setEditedProfile(prev => ({ ...prev, bio: e.target.value }))}
+                    value={editedProfile.bio || ""}
+                    onChange={(e) =>
+                      setEditedProfile((prev) => ({
+                        ...prev,
+                        bio: e.target.value,
+                      }))
+                    }
                     rows={4}
                   />
                 ) : (
                   <p className="text-gray-700">
-                    {userProfile.bio || 'Add a bio to tell others about yourself, your goals, and what you\'re passionate about.'}
+                    {userProfile.bio ||
+                      "Add a bio to tell others about yourself, your goals, and what you're passionate about."}
                   </p>
                 )}
               </CardContent>
@@ -419,27 +606,29 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm mb-3">Preferred Job Types</label>
+                    <label className="block text-sm mb-3">
+                      Preferred Job Types
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {isEditing ? (
-                        availableJobTypes.map((jobType) => (
-                          <button
-                            key={jobType}
-                            onClick={() => toggleJobType(jobType)}
-                            className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                              editedProfile.jobTypes.includes(jobType)
-                                ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                            }`}
-                          >
-                            {jobType}
-                          </button>
-                        ))
-                      ) : (
-                        userProfile.jobTypes.map((jobType) => (
-                          <Badge key={jobType} variant="secondary">{jobType}</Badge>
-                        ))
-                      )}
+                      {isEditing
+                        ? availableJobTypes.map((jobType) => (
+                            <button
+                              key={jobType}
+                              onClick={() => toggleJobType(jobType)}
+                              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                                editedProfile.jobTypes.includes(jobType)
+                                  ? "bg-blue-100 text-blue-700 border border-blue-300"
+                                  : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                              }`}
+                            >
+                              {jobType}
+                            </button>
+                          ))
+                        : userProfile.jobTypes.map((jobType) => (
+                            <Badge key={jobType} variant="secondary">
+                              {jobType}
+                            </Badge>
+                          ))}
                     </div>
                   </div>
                 </div>
@@ -454,52 +643,62 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
               <CardContent>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm mb-3">Professional Skills</label>
+                    <label className="block text-sm mb-3">
+                      Professional Skills
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {isEditing ? (
-                        availableSkills.map((skill) => (
-                          <button
-                            key={skill}
-                            onClick={() => toggleSkill(skill)}
-                            className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                              editedProfile.skills.includes(skill)
-                                ? 'bg-green-100 text-green-700 border border-green-300'
-                                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                            }`}
-                          >
-                            {skill}
-                          </button>
-                        ))
-                      ) : (
-                        userProfile.skills.map((skill) => (
-                          <Badge key={skill} className="bg-green-100 text-green-700">{skill}</Badge>
-                        ))
-                      )}
+                      {isEditing
+                        ? availableSkills.map((skill) => (
+                            <button
+                              key={skill}
+                              onClick={() => toggleSkill(skill)}
+                              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                                editedProfile.skills.includes(skill)
+                                  ? "bg-green-100 text-green-700 border border-green-300"
+                                  : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                              }`}
+                            >
+                              {skill}
+                            </button>
+                          ))
+                        : userProfile.skills.map((skill) => (
+                            <Badge
+                              key={skill}
+                              className="bg-green-100 text-green-700"
+                            >
+                              {skill}
+                            </Badge>
+                          ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm mb-3">Personal Interests</label>
+                    <label className="block text-sm mb-3">
+                      Personal Interests
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {isEditing ? (
-                        availableInterests.map((interest) => (
-                          <button
-                            key={interest}
-                            onClick={() => toggleInterest(interest)}
-                            className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                              editedProfile.interests.includes(interest)
-                                ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                            }`}
-                          >
-                            {interest}
-                          </button>
-                        ))
-                      ) : (
-                        userProfile.interests.map((interest) => (
-                          <Badge key={interest} className="bg-purple-100 text-purple-700">{interest}</Badge>
-                        ))
-                      )}
+                      {isEditing
+                        ? availableInterests.map((interest) => (
+                            <button
+                              key={interest}
+                              onClick={() => toggleInterest(interest)}
+                              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                                editedProfile.interests.includes(interest)
+                                  ? "bg-purple-100 text-purple-700 border border-purple-300"
+                                  : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                              }`}
+                            >
+                              {interest}
+                            </button>
+                          ))
+                        : userProfile.interests.map((interest) => (
+                            <Badge
+                              key={interest}
+                              className="bg-purple-100 text-purple-700"
+                            >
+                              {interest}
+                            </Badge>
+                          ))}
                     </div>
                   </div>
                 </div>

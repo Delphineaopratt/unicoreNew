@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Mail, Phone, MapPin, GraduationCap, X } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Mail,
+  Phone,
+  MapPin,
+  GraduationCap,
+  X,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { toast } from "sonner";
@@ -45,14 +53,14 @@ export function ApplicationsPage() {
 
   const handleStatusChange = async (
     id: string,
-    newStatus: JobApplication["status"]
+    newStatus: JobApplication["status"],
   ) => {
     try {
       await updateApplicationStatus(id, newStatus);
       setApplications((prev) =>
         prev.map((app) =>
-          app._id === id ? { ...app, status: newStatus } : app
-        )
+          app._id === id ? { ...app, status: newStatus } : app,
+        ),
       );
       toast.success(`Application ${newStatus}`);
     } catch (error) {
@@ -115,7 +123,7 @@ export function ApplicationsPage() {
 
   const getFileUrl = (fileData: any) => {
     if (!fileData) return null;
-    
+
     // If it's an object with a url property, use that
     if (typeof fileData === "object" && fileData.url) {
       const url = fileData.url;
@@ -125,7 +133,7 @@ export function ApplicationsPage() {
       }
       return url;
     }
-    
+
     // If it's a string (legacy format)
     if (typeof fileData === "string") {
       if (fileData.startsWith("/")) {
@@ -133,7 +141,7 @@ export function ApplicationsPage() {
       }
       return fileData;
     }
-    
+
     return null;
   };
 
@@ -253,7 +261,7 @@ export function ApplicationsPage() {
                                 onClick={() =>
                                   handleStatusChange(
                                     application._id,
-                                    "rejected"
+                                    "rejected",
                                   )
                                 }
                               >
@@ -268,7 +276,7 @@ export function ApplicationsPage() {
                               onClick={() =>
                                 handleStatusChange(
                                   application._id,
-                                  "shortlisted"
+                                  "shortlisted",
                                 )
                               }
                             >
@@ -313,7 +321,15 @@ export function ApplicationsPage() {
 
       {/* Application Details Modal */}
       <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
-        <DialogContent className="max-w-2xl w-full p-0 flex flex-col" style={{maxHeight: '90vh', height: '90vh', display: 'flex', flexDirection: 'column'}}>
+        <DialogContent
+          className="max-w-2xl w-full p-0 flex flex-col"
+          style={{
+            maxHeight: "90vh",
+            height: "90vh",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <DialogHeader className="flex-shrink-0 px-6 py-4 border-b bg-white">
             <DialogTitle className="text-2xl">Application Details</DialogTitle>
             <button
@@ -325,7 +341,17 @@ export function ApplicationsPage() {
           </DialogHeader>
 
           {selectedApplication && (
-            <div style={{flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingLeft: '24px', paddingRight: '12px', paddingTop: '24px', paddingBottom: '24px'}}>
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                overflowX: "hidden",
+                paddingLeft: "24px",
+                paddingRight: "12px",
+                paddingTop: "24px",
+                paddingBottom: "24px",
+              }}
+            >
               <div className="space-y-6 pr-4">
                 {/* Student Profile Section */}
                 <div className="border-b pb-6">
@@ -335,25 +361,35 @@ export function ApplicationsPage() {
                   <div className="flex items-center gap-6">
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-bold text-2xl">
-                        {(selectedApplication.student as any)?.name?.charAt(0) || "U"}
+                        {(selectedApplication.student as any)?.name?.charAt(
+                          0,
+                        ) || "U"}
                       </span>
                     </div>
                     <div className="flex-1">
                       <h4 className="text-xl font-semibold text-gray-900 mb-2">
-                        {(selectedApplication.student as any)?.name || "Unknown Student"}
+                        {(selectedApplication.student as any)?.name ||
+                          "Unknown Student"}
                       </h4>
                       <div className="space-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <Mail size={16} className="text-blue-600" />
-                          <span>{(selectedApplication.student as any)?.email}</span>
+                          <span>
+                            {(selectedApplication.student as any)?.email}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Phone size={16} className="text-blue-600" />
-                          <span>{(selectedApplication.student as any)?.phone || "Not provided"}</span>
+                          <span>
+                            {(selectedApplication.student as any)?.phone ||
+                              "Not provided"}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <MapPin size={16} className="text-blue-600" />
-                          <span>{selectedApplication.address || "Not provided"}</span>
+                          <span>
+                            {selectedApplication.address || "Not provided"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -368,15 +404,19 @@ export function ApplicationsPage() {
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600 font-medium">Program</p>
+                      <p className="text-sm text-gray-600 font-medium">
+                        Program
+                      </p>
                       <p className="text-gray-900 font-semibold">
-                        {(selectedApplication.student as any)?.program || "Not specified"}
+                        {(selectedApplication.student as any)?.program ||
+                          "Not specified"}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 font-medium">CGPA</p>
                       <p className="text-gray-900 font-semibold">
-                        {(selectedApplication.student as any)?.cgpa || "Not specified"}
+                        {(selectedApplication.student as any)?.cgpa ||
+                          "Not specified"}
                       </p>
                     </div>
                   </div>
@@ -385,7 +425,9 @@ export function ApplicationsPage() {
                   {(selectedApplication.student as any)?.skills &&
                     (selectedApplication.student as any).skills.length > 0 && (
                       <div className="mt-4">
-                        <p className="text-sm text-gray-600 font-medium mb-2">Skills</p>
+                        <p className="text-sm text-gray-600 font-medium mb-2">
+                          Skills
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {(selectedApplication.student as any).skills.map(
                             (skill: string, index: number) => (
@@ -396,7 +438,7 @@ export function ApplicationsPage() {
                               >
                                 {skill}
                               </Badge>
-                            )
+                            ),
                           )}
                         </div>
                       </div>
@@ -413,50 +455,70 @@ export function ApplicationsPage() {
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-sm text-gray-600 font-medium">School Name</p>
+                          <p className="text-sm text-gray-600 font-medium">
+                            School Name
+                          </p>
                           <p className="text-gray-900 font-semibold">
-                            {(selectedApplication.student as any)?.school?.name || "Not provided"}
+                            {(selectedApplication.student as any)?.school
+                              ?.name || "Not provided"}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600 font-medium">School Email</p>
+                          <p className="text-sm text-gray-600 font-medium">
+                            School Email
+                          </p>
                           <p className="text-gray-900 font-semibold break-all">
-                            {(selectedApplication.student as any)?.school?.email || "Not provided"}
+                            {(selectedApplication.student as any)?.school
+                              ?.email || "Not provided"}
                           </p>
                         </div>
                       </div>
-                      {(selectedApplication.student as any)?.school?.address && (
+                      {(selectedApplication.student as any)?.school
+                        ?.address && (
                         <div>
-                          <p className="text-sm text-gray-600 font-medium mb-1">School Address</p>
+                          <p className="text-sm text-gray-600 font-medium mb-1">
+                            School Address
+                          </p>
                           <p className="text-gray-900 font-semibold whitespace-pre-wrap">
-                            {(selectedApplication.student as any)?.school?.address}
+                            {
+                              (selectedApplication.student as any)?.school
+                                ?.address
+                            }
                           </p>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <p className="text-gray-500 italic">No school information provided</p>
+                    <p className="text-gray-500 italic">
+                      No school information provided
+                    </p>
                   )}
                 </div>
 
                 {/* Application Information Section */}
                 <div className="border-b pb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Information</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Application Information
+                  </h3>
                   <div className="space-y-3 text-sm">
                     <div>
                       <p className="text-gray-600 font-medium">Position</p>
                       <p className="text-gray-900 font-semibold">
-                        {(selectedApplication.job as any)?.title || "Unknown Position"}
+                        {(selectedApplication.job as any)?.title ||
+                          "Unknown Position"}
                       </p>
                     </div>
                     <div>
                       <p className="text-gray-600 font-medium">Company</p>
                       <p className="text-gray-900 font-semibold">
-                        {(selectedApplication.job as any)?.company || "Unknown Company"}
+                        {(selectedApplication.job as any)?.company ||
+                          "Unknown Company"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-600 font-medium">Application Status</p>
+                      <p className="text-gray-600 font-medium">
+                        Application Status
+                      </p>
                       <Badge
                         className={`mt-1 ${getStatusBadgeProps(selectedApplication.status).className}`}
                       >
@@ -466,7 +528,9 @@ export function ApplicationsPage() {
                     <div>
                       <p className="text-gray-600 font-medium">Applied Date</p>
                       <p className="text-gray-900 font-semibold">
-                        {new Date(selectedApplication.createdAt).toLocaleDateString()}
+                        {new Date(
+                          selectedApplication.createdAt,
+                        ).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -475,7 +539,9 @@ export function ApplicationsPage() {
                 {/* Cover Letter Section */}
                 {selectedApplication.coverLetter && (
                   <div className="border-b pb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Cover Letter</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Cover Letter
+                    </h3>
                     <p className="text-gray-700 bg-gray-50 p-4 rounded-lg leading-relaxed">
                       {selectedApplication.coverLetter}
                     </p>
@@ -492,12 +558,18 @@ export function ApplicationsPage() {
                     {selectedApplication.resume ? (
                       <div className="flex items-center justify-between bg-blue-50 border border-blue-200 p-4 rounded-lg hover:bg-blue-100 transition-colors">
                         <div className="flex items-center gap-3 flex-1">
-                          <FileText size={20} className="text-red-500 flex-shrink-0" />
+                          <FileText
+                            size={20}
+                            className="text-red-500 flex-shrink-0"
+                          />
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-900">Resume</p>
+                            <p className="font-semibold text-gray-900">
+                              Resume
+                            </p>
                             <p className="text-xs text-gray-600">
                               {typeof selectedApplication.resume === "object"
-                                ? selectedApplication.resume.filename || "resume.pdf"
+                                ? selectedApplication.resume.filename ||
+                                  "resume.pdf"
                                 : "resume.pdf"}
                             </p>
                           </div>
@@ -523,7 +595,9 @@ export function ApplicationsPage() {
                       <div className="flex items-center justify-between bg-gray-50 border border-gray-200 p-4 rounded-lg">
                         <div className="flex items-center gap-3">
                           <FileText size={20} className="text-gray-400" />
-                          <p className="text-gray-500 italic">No resume uploaded</p>
+                          <p className="text-gray-500 italic">
+                            No resume uploaded
+                          </p>
                         </div>
                       </div>
                     )}
@@ -531,12 +605,19 @@ export function ApplicationsPage() {
                     {selectedApplication.transcript ? (
                       <div className="flex items-center justify-between bg-purple-50 border border-purple-200 p-4 rounded-lg hover:bg-purple-100 transition-colors">
                         <div className="flex items-center gap-3 flex-1">
-                          <FileText size={20} className="text-purple-500 flex-shrink-0" />
+                          <FileText
+                            size={20}
+                            className="text-purple-500 flex-shrink-0"
+                          />
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-900">Transcript</p>
+                            <p className="font-semibold text-gray-900">
+                              Transcript
+                            </p>
                             <p className="text-xs text-gray-600">
-                              {typeof selectedApplication.transcript === "object"
-                                ? selectedApplication.transcript.filename || "transcript.pdf"
+                              {typeof selectedApplication.transcript ===
+                              "object"
+                                ? selectedApplication.transcript.filename ||
+                                  "transcript.pdf"
                                 : "transcript.pdf"}
                             </p>
                           </div>
@@ -546,7 +627,9 @@ export function ApplicationsPage() {
                           size="sm"
                           className="text-purple-600 hover:text-purple-700 hover:bg-purple-200 ml-2 flex-shrink-0 font-semibold"
                           onClick={() => {
-                            const url = getFileUrl(selectedApplication.transcript);
+                            const url = getFileUrl(
+                              selectedApplication.transcript,
+                            );
                             if (url) {
                               window.open(url, "_blank", "noopener,noreferrer");
                               toast.success("Opening transcript...");
@@ -562,7 +645,9 @@ export function ApplicationsPage() {
                       <div className="flex items-center justify-between bg-gray-50 border border-gray-200 p-4 rounded-lg">
                         <div className="flex items-center gap-3">
                           <FileText size={20} className="text-gray-400" />
-                          <p className="text-gray-500 italic">No transcript uploaded</p>
+                          <p className="text-gray-500 italic">
+                            No transcript uploaded
+                          </p>
                         </div>
                       </div>
                     )}
@@ -577,7 +662,10 @@ export function ApplicationsPage() {
                         variant="outline"
                         className="text-red-600 border-red-300 hover:bg-red-50"
                         onClick={() => {
-                          handleStatusChange(selectedApplication._id, "rejected");
+                          handleStatusChange(
+                            selectedApplication._id,
+                            "rejected",
+                          );
                           setShowDetailsModal(false);
                         }}
                       >
@@ -588,7 +676,10 @@ export function ApplicationsPage() {
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => {
-                        handleStatusChange(selectedApplication._id, "shortlisted");
+                        handleStatusChange(
+                          selectedApplication._id,
+                          "shortlisted",
+                        );
                         setShowDetailsModal(false);
                       }}
                     >
@@ -606,16 +697,17 @@ export function ApplicationsPage() {
                       Accept Candidate
                     </Button>
                   )}
-                  {selectedApplication.transcript && (selectedApplication.student as any)?.school?.email && (
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => {
-                        handleVerifyTranscript(selectedApplication._id);
-                      }}
-                    >
-                      Verify Transcript
-                    </Button>
-                  )}
+                  {selectedApplication.transcript &&
+                    (selectedApplication.student as any)?.school?.email && (
+                      <Button
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => {
+                          handleVerifyTranscript(selectedApplication._id);
+                        }}
+                      >
+                        Verify Transcript
+                      </Button>
+                    )}
                 </div>
               </div>
             </div>

@@ -126,6 +126,7 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Playfair Display", serif;
   }
 }
 
@@ -220,4 +221,139 @@ html {
 /* Modal specific styles */
 [role="dialog"] [style*="overflowY"] {
   scrollbar-width: auto !important;
+}
+
+/* Landing page hero section with animated background */
+.hero-bg {
+  position: relative;
+  min-height: 600px;
+}
+
+.hero-bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 120%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(37, 99, 235, 0.7) 0%,
+    rgba(6, 182, 212, 0.6) 100%
+  );
+  z-index: 1;
+}
+
+/* Ken Burns effect for background image */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1) translateX(0) translateY(0);
+  }
+  50% {
+    transform: scale(1.1) translateX(-2%) translateY(2%);
+  }
+  100% {
+    transform: scale(1.05) translateX(2%) translateY(-2%);
+  }
+}
+
+/* Text animations */
+@keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 1s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 1s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-48px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.9s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.9s ease-out forwards;
+  opacity: 0;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+@keyframes cardGrow {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+.card-hover-pulse {
+  transition: box-shadow 0.3s ease-out;
+}
+
+.card-hover-pulse:hover {
+  animation: cardGrow 0.5s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.32);
 }

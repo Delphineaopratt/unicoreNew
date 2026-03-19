@@ -1,33 +1,40 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Building2, Briefcase, MessageSquare, User, LogOut } from 'lucide-react';
-import { Button } from './ui/button';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Building2,
+  Briefcase,
+  MessageSquare,
+  User,
+  LogOut,
+} from "lucide-react";
+import { Button } from "./ui/button";
 
 interface StudentNavigationProps {
   onLogout?: () => void;
 }
 
 export function StudentNavigation({ onLogout }: StudentNavigationProps) {
-  const [userName, setUserName] = React.useState<string>('');
+  const [userName, setUserName] = React.useState<string>("");
 
   React.useEffect(() => {
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem("user");
     if (user) {
       try {
         const parsedUser = JSON.parse(user);
-        setUserName(parsedUser.name || 'User');
+        setUserName(parsedUser.name || "User");
       } catch (e) {
-        setUserName('User');
+        setUserName("User");
       }
     }
   }, []);
 
   const menuItems = [
-    { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/student/hostels', label: 'Hostels', icon: Building2 },
-    { to: '/student/jobs', label: 'Job & internships', icon: Briefcase },
-    { to: '/student/chat', label: 'Chat with United', icon: MessageSquare },
-    { to: '/student/profile', label: 'My Profile', icon: User },
+    { to: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/student/hostels", label: "Hostels", icon: Building2 },
+    { to: "/student/jobs", label: "Job & internships", icon: Briefcase },
+    { to: "/student/chat", label: "Chat with Unibot", icon: MessageSquare },
+    { to: "/student/profile", label: "My Profile", icon: User },
   ];
 
   return (
@@ -44,7 +51,7 @@ export function StudentNavigation({ onLogout }: StudentNavigationProps) {
             <p className="text-sm text-gray-600 ml-11">Welcome, {userName}</p>
           )}
         </div>
-        
+
         <nav className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -55,8 +62,8 @@ export function StudentNavigation({ onLogout }: StudentNavigationProps) {
                 className={({ isActive }) =>
                   `w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? "bg-blue-50 text-blue-600"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`
                 }
               >
@@ -73,10 +80,10 @@ export function StudentNavigation({ onLogout }: StudentNavigationProps) {
               variant="ghost"
               onClick={onLogout}
               className="w-full flex items-center gap-3 px-3 py-2 justify-start transition-colors font-medium"
-              style={{ color: '#dc2626' }}
+              style={{ color: "#dc2626" }}
             >
-              <LogOut size={20} style={{ color: '#dc2626' }} />
-              <span style={{ color: '#dc2626' }}>Logout</span>
+              <LogOut size={20} style={{ color: "#dc2626" }} />
+              <span style={{ color: "#dc2626" }}>Logout</span>
             </Button>
           </div>
         )}

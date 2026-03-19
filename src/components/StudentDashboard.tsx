@@ -40,7 +40,7 @@ export function StudentDashboard() {
   return (
     <div className="flex-1 bg-gray-50">
       {/* Hero Section with Slideshow */}
-      <div className="relative h-64 bg-gradient-to-r from-purple-600 to-blue-600 overflow-hidden">
+      <div className="relative h-80 bg-gradient-to-r from-purple-600 to-blue-600 overflow-hidden">
         <div className="absolute inset-0">
           <img
             src={slideshowImages[currentSlide].image}
@@ -107,7 +107,7 @@ export function StudentDashboard() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="flex justify-center items-center mb-4">
               <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">SK</span>
+                <span className="text-white font-semibold">AF</span>
               </div>
             </div>
             <blockquote className="text-lg text-gray-700 mb-4">
@@ -115,7 +115,7 @@ export function StudentDashboard() {
               of this site, I got accepted to an internship and now work full
               time."
             </blockquote>
-            <cite className="text-purple-600 font-medium">- Sharon Kumari</cite>
+            <cite className="text-purple-600 font-medium">- Aaron Fay</cite>
           </div>
         </div>
       </div>
