@@ -28,7 +28,7 @@ function CreateHostelPage() {
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
-  }>({ latitude: 5.6037, longitude: -0.1870 });
+  }>({ latitude: 5.6037, longitude: -0.187 });
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -65,10 +65,12 @@ function CreateHostelPage() {
       formData.append("location", hostelForm.location);
       formData.append("description", hostelForm.description);
       formData.append("availableRooms", hostelForm.availableRooms.toString());
-      formData.append("adminId", "672c1e2f0e12a835b4f1d8f9");
       formData.append("coordinates[latitude]", coordinates.latitude.toString());
-      formData.append("coordinates[longitude]", coordinates.longitude.toString());
-      
+      formData.append(
+        "coordinates[longitude]",
+        coordinates.longitude.toString(),
+      );
+
       hostelForm.photos.forEach((photo) => {
         if (photo.file) {
           formData.append("photos", photo.file);
@@ -77,7 +79,7 @@ function CreateHostelPage() {
 
       await createHostel(formData);
       toast.success("Hostel created successfully!");
-      
+
       // Reset form
       setHostelForm({
         name: "",
@@ -86,8 +88,8 @@ function CreateHostelPage() {
         availableRooms: 0,
         photos: [],
       });
-      setCoordinates({ latitude: 5.6037, longitude: -0.1870 });
-      
+      setCoordinates({ latitude: 5.6037, longitude: -0.187 });
+
       navigate("/hostel-admin/hostels");
     } catch (err) {
       toast.error("Failed to create hostel. Please try again.");

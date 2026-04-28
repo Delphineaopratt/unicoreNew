@@ -24,7 +24,7 @@ import { Toaster } from "./components/ui/sonner";
 import { UnibotProvider } from "./context/UnibotContext";
 
 interface Job {
-  id: number;
+  id: string;
   title: string;
   company: string;
   type: string;
@@ -210,7 +210,7 @@ export default function App() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [jobApplications, setJobApplications] = useState<JobApplication[]>([]);
   const [jobNotifications, setJobNotifications] = useState<JobNotification[]>(
-    []
+    [],
   );
   const [isOnboardingActive, setIsOnboardingActive] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -220,6 +220,25 @@ export default function App() {
   const [hostelNotifications, setHostelNotifications] = useState<
     HostelNotification[]
   >([]);
+
+  const mapJobFromApi = (job: any): Job => ({
+    id: job._id,
+    title: job.title,
+    company: job.company,
+    location: job.location,
+    type: job.type,
+    minSalary: job.salary?.min?.toString() || "0",
+    maxSalary: job.salary?.max?.toString() || "0",
+    description: job.description,
+    requirements: Array.isArray(job.requirements)
+      ? job.requirements.join(", ")
+      : job.requirements || "",
+    deadline: job.applicationDeadline
+      ? new Date(job.applicationDeadline).toLocaleDateString()
+      : "Not set",
+    applications: job.applicationsCount || 0,
+    status: job.status || "active",
+  });
 
   const [hostelsData, setHostelsData] = useState<HostelData[]>([
     {
@@ -302,40 +321,31 @@ export default function App() {
     const fetchEmployerJobs = async () => {
       if (isAuthenticated && userType === "employer") {
         try {
-          const response = await fetch("http://localhost:5001/api/jobs", {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+          const response = await fetch(
+            "http://localhost:5001/api/jobs/my-jobs",
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
             },
-          });
+          );
 
           if (response.ok) {
             const result = await response.json();
             if (result.success) {
-              // Transform API response to match component interface
-              const transformedJobs = result.data.map((job: any) => ({
-                id: job._id,
-                title: job.title,
-                company: job.company,
-                location: job.location,
-                type: job.type,
-                minSalary: job.salary?.min?.toString() || "0",
-                maxSalary: job.salary?.max?.toString() || "0",
-                description: job.description,
-                requirements: Array.isArray(job.requirements)
-                  ? job.requirements.join(", ")
-                  : job.requirements || "",
-                deadline: job.applicationDeadline
-                  ? new Date(job.applicationDeadline).toLocaleDateString()
-                  : "Not set",
-                applications: job.applicationsCount || 0,
-                status: job.status || "active",
-              }));
+              const transformedJobs = result.data.map(mapJobFromApi);
               setJobs(transformedJobs);
             }
+          } else {
+            setJobs([]);
           }
         } catch (error) {
           console.error("Error fetching employer jobs:", error);
+          setJobs([]);
         }
+      } else {
+        // Prevent stale employer jobs from previous sessions/users.
+        setJobs([]);
       }
     };
 
@@ -358,7 +368,7 @@ export default function App() {
                 company: app.job.company,
                 appliedDate: new Date(app.createdAt).toLocaleDateString(),
                 status: app.status,
-              })
+              }),
             );
             setJobApplications(transformedApplications);
           }
@@ -375,7 +385,7 @@ export default function App() {
                 date: new Date(notif.createdAt).toISOString(),
                 type: notif.type,
                 read: notif.read,
-              })
+              }),
             );
             setJobNotifications(transformedNotifications);
           }
@@ -390,31 +400,13 @@ export default function App() {
 
   // Handlers
   const handleJobAdded = (job: any) => {
-    // Transform the newly created job to match the component interface
-    const newJob: Job = {
-      id: job._id,
-      title: job.title,
-      company: job.company,
-      location: job.location,
-      type: job.type,
-      minSalary: job.salary?.min?.toString() || "0",
-      maxSalary: job.salary?.max?.toString() || "0",
-      description: job.description,
-      requirements: Array.isArray(job.requirements)
-        ? job.requirements.join(", ")
-        : job.requirements || "",
-      deadline: job.applicationDeadline
-        ? new Date(job.applicationDeadline).toLocaleDateString()
-        : "Not set",
-      applications: job.applicationsCount || 0,
-      status: job.status || "active",
-    };
+    const newJob: Job = mapJobFromApi(job);
 
     // Add the new job to the local state so it appears immediately
     setJobs((prev) => [...prev, newJob]);
   };
 
-  const handleDeleteJob = async (jobId: number) => {
+  const handleDeleteJob = async (jobId: string) => {
     try {
       const response = await fetch(`http://localhost:5001/api/jobs/${jobId}`, {
         method: "DELETE",
@@ -481,7 +473,7 @@ export default function App() {
       console.error("Login failed:", error);
       alert(
         error.response?.data?.message ||
-          "Login failed. Please check your credentials."
+          "Login failed. Please check your credentials.",
       );
     }
   };
@@ -497,7 +489,7 @@ export default function App() {
         userData.email,
         userData.password,
         userData.fullName,
-        userData.userType
+        userData.userType,
       );
 
       console.log("Signup successful:", response);
@@ -514,7 +506,7 @@ export default function App() {
     } catch (error: any) {
       console.error("Signup failed:", error);
       alert(
-        error.response?.data?.message || "Signup failed. Please try again."
+        error.response?.data?.message || "Signup failed. Please try again.",
       );
     }
   };
@@ -573,7 +565,7 @@ export default function App() {
             company: app.job?.company || "Unknown Company",
             appliedDate: new Date(app.createdAt).toLocaleDateString(),
             status: app.status,
-          })
+          }),
         );
         setJobApplications(transformedApplications);
       }
@@ -588,10 +580,13 @@ export default function App() {
       const { getMyJobs } = await import("./services/job.service");
       const jobsResponse = await getMyJobs();
       if (jobsResponse.success) {
-        setJobs(jobsResponse.data);
+        setJobs((jobsResponse.data || []).map(mapJobFromApi));
+      } else {
+        setJobs([]);
       }
     } catch (error) {
       console.error("Error fetching employer data:", error);
+      setJobs([]);
     }
   };
 
@@ -607,13 +602,14 @@ export default function App() {
   const handleOnboardingComplete = async (data: UserProfile) => {
     try {
       console.log("Onboarding completed:", data);
-      
+
       // Save to user profile
       const { completeOnboarding } = await import("./services/user.service");
       await completeOnboarding(data);
 
       // Save to job preferences
-      const { saveJobPreferences } = await import("./services/jobPreference.service");
+      const { saveJobPreferences } =
+        await import("./services/jobPreference.service");
       await saveJobPreferences({
         program: data.program,
         cgpa: data.cgpa,
@@ -709,207 +705,207 @@ export default function App() {
     <UnibotProvider>
       <>
         <Routes>
-        {/* Public Routes */}
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <Navigate
-                to={
-                  userType === "student"
-                    ? "/student/dashboard"
-                    : userType === "hostel-admin"
-                    ? "/hostel/dashboard"
-                    : "/employer/dashboard"
-                }
-                replace
-              />
-            ) : (
-              <LandingPage
-                onLogin={handleShowLogin}
-                onSignup={handleShowSignup}
-              />
-            )
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? (
-              <Navigate
-                to={
-                  userType === "student"
-                    ? "/student/dashboard"
-                    : userType === "hostel-admin"
-                    ? "/hostel/dashboard"
-                    : "/employer/dashboard"
-                }
-                replace
-              />
-            ) : (
-              <LoginForm onLogin={handleLogin} onBack={handleBackToLanding} />
-            )
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            isAuthenticated ? (
-              <Navigate
-                to={
-                  userType === "student"
-                    ? "/student/dashboard"
-                    : userType === "hostel-admin"
-                    ? "/hostel/dashboard"
-                    : "/employer/dashboard"
-                }
-                replace
-              />
-            ) : (
-              <SignupForm
-                onSignup={handleSignup}
-                onBack={handleBackToLanding}
-              />
-            )
-          }
-        />
+          {/* Public Routes */}
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate
+                  to={
+                    userType === "student"
+                      ? "/student/dashboard"
+                      : userType === "hostel-admin"
+                        ? "/hostel/dashboard"
+                        : "/employer/dashboard"
+                  }
+                  replace
+                />
+              ) : (
+                <LandingPage
+                  onLogin={handleShowLogin}
+                  onSignup={handleShowSignup}
+                />
+              )
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? (
+                <Navigate
+                  to={
+                    userType === "student"
+                      ? "/student/dashboard"
+                      : userType === "hostel-admin"
+                        ? "/hostel/dashboard"
+                        : "/employer/dashboard"
+                  }
+                  replace
+                />
+              ) : (
+                <LoginForm onLogin={handleLogin} onBack={handleBackToLanding} />
+              )
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              isAuthenticated ? (
+                <Navigate
+                  to={
+                    userType === "student"
+                      ? "/student/dashboard"
+                      : userType === "hostel-admin"
+                        ? "/hostel/dashboard"
+                        : "/employer/dashboard"
+                  }
+                  replace
+                />
+              ) : (
+                <SignupForm
+                  onSignup={handleSignup}
+                  onBack={handleBackToLanding}
+                />
+              )
+            }
+          />
 
-        {/* Student Routes */}
-        <Route
-          path="/student/*"
-          element={
-            <ProtectedRoute
-              isAuthenticated={isAuthenticated && userType === "student"}
-            >
-              <DashboardLayout userType={userType} onLogout={handleLogout}>
-                <Routes>
-                  <Route
-                    path="dashboard"
-                    element={
-                      <StudentDashboard
-                        bookings={bookings}
-                        notifications={notifications}
-                        setNotifications={setNotifications}
-                        jobApplications={jobApplications}
-                        jobNotifications={jobNotifications}
-                        setJobNotifications={setJobNotifications}
-                        onStartOnboarding={handleStartOnboarding}
-                      />
-                    }
-                  />
-                  <Route path="hostels" element={<HostelBooking />} />
-                  <Route
-                    path="hostel-details"
-                    element={
-                      <HostelDetails
-                        hostelId={selectedHostelId || "1"}
-                        onBooking={handleBooking}
-                      />
-                    }
-                  />
-                  <Route
-                    path="jobs"
-                    element={
-                      <JobsPage
-                        onApplyToJob={handleApplyToJob}
-                        onStartOnboarding={handleStartOnboarding}
-                      />
-                    }
-                  />
-                  <Route
-                    path="job-application"
-                    element={
-                      <JobApplicationForm job={selectedJobForApplication} />
-                    }
-                  />
-                  <Route path="chat" element={<UnibotChat />} />
-                  <Route
-                    path="profile"
-                    element={
-                      <MyProfile
-                        userProfile={userProfile}
-                        onUpdateProfile={handleUpdateProfile}
-                      />
-                    }
-                  />
-                  <Route
-                    path="*"
-                    element={<Navigate to="/student/dashboard" replace />}
-                  />
-                </Routes>
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
+          {/* Student Routes */}
+          <Route
+            path="/student/*"
+            element={
+              <ProtectedRoute
+                isAuthenticated={isAuthenticated && userType === "student"}
+              >
+                <DashboardLayout userType={userType} onLogout={handleLogout}>
+                  <Routes>
+                    <Route
+                      path="dashboard"
+                      element={
+                        <StudentDashboard
+                          bookings={bookings}
+                          notifications={notifications}
+                          setNotifications={setNotifications}
+                          jobApplications={jobApplications}
+                          jobNotifications={jobNotifications}
+                          setJobNotifications={setJobNotifications}
+                          onStartOnboarding={handleStartOnboarding}
+                        />
+                      }
+                    />
+                    <Route path="hostels" element={<HostelBooking />} />
+                    <Route
+                      path="hostel-details"
+                      element={
+                        <HostelDetails
+                          hostelId={selectedHostelId || "1"}
+                          onBooking={handleBooking}
+                        />
+                      }
+                    />
+                    <Route
+                      path="jobs"
+                      element={
+                        <JobsPage
+                          onApplyToJob={handleApplyToJob}
+                          onStartOnboarding={handleStartOnboarding}
+                        />
+                      }
+                    />
+                    <Route
+                      path="job-application"
+                      element={
+                        <JobApplicationForm job={selectedJobForApplication} />
+                      }
+                    />
+                    <Route path="chat" element={<UnibotChat />} />
+                    <Route
+                      path="profile"
+                      element={
+                        <MyProfile
+                          userProfile={userProfile}
+                          onUpdateProfile={handleUpdateProfile}
+                        />
+                      }
+                    />
+                    <Route
+                      path="*"
+                      element={<Navigate to="/student/dashboard" replace />}
+                    />
+                  </Routes>
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Employer Routes */}
+          <Route
+            path="/employer/*"
+            element={
+              <ProtectedRoute
+                isAuthenticated={isAuthenticated && userType === "employer"}
+              >
+                <DashboardLayout userType={userType} onLogout={handleLogout}>
+                  <Routes>
+                    <Route
+                      path="dashboard"
+                      element={<JobPostingForm onJobAdded={handleJobAdded} />}
+                    />
+                    <Route
+                      path="job-listings"
+                      element={
+                        <JobListingsPage
+                          jobs={jobs}
+                          onViewJob={handleViewJob}
+                          onEditJob={handleEditJob}
+                          onDeleteJob={handleDeleteJob}
+                        />
+                      }
+                    />
+                    <Route path="applications" element={<ApplicationsPage />} />
+                    <Route path="candidates" element={<CandidatesPage />} />
+                    <Route
+                      path="*"
+                      element={<Navigate to="/employer/dashboard" replace />}
+                    />
+                  </Routes>
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Hostel Admin Routes */}
+          <Route
+            path="/hostel-admin/*"
+            element={
+              <ProtectedRoute
+                isAuthenticated={isAuthenticated && userType === "hostel-admin"}
+              >
+                <HostelAdminDashboard
+                  notifications={hostelNotifications}
+                  setNotifications={setHostelNotifications}
+                  onLogout={handleLogout}
+                />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Legacy route - redirect to new route */}
+          <Route
+            path="/hostel/*"
+            element={<Navigate to="/hostel-admin" replace />}
+          />
+
+          {/* Catch all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+
+        <ProfileUpdatedModal
+          isOpen={showProfileUpdatedModal}
+          onClose={() => setShowProfileUpdatedModal(false)}
+          isInitialSetup={userProfile && !userProfile.email}
         />
-
-        {/* Employer Routes */}
-        <Route
-          path="/employer/*"
-          element={
-            <ProtectedRoute
-              isAuthenticated={isAuthenticated && userType === "employer"}
-            >
-              <DashboardLayout userType={userType} onLogout={handleLogout}>
-                <Routes>
-                  <Route
-                    path="dashboard"
-                    element={<JobPostingForm onJobAdded={handleJobAdded} />}
-                  />
-                  <Route
-                    path="job-listings"
-                    element={
-                      <JobListingsPage
-                        jobs={jobs}
-                        onViewJob={handleViewJob}
-                        onEditJob={handleEditJob}
-                        onDeleteJob={handleDeleteJob}
-                      />
-                    }
-                  />
-                  <Route path="applications" element={<ApplicationsPage />} />
-                  <Route path="candidates" element={<CandidatesPage />} />
-                  <Route
-                    path="*"
-                    element={<Navigate to="/employer/dashboard" replace />}
-                  />
-                </Routes>
-              </DashboardLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Hostel Admin Routes */}
-        <Route
-          path="/hostel-admin/*"
-          element={
-            <ProtectedRoute
-              isAuthenticated={isAuthenticated && userType === "hostel-admin"}
-            >
-              <HostelAdminDashboard
-                notifications={hostelNotifications}
-                setNotifications={setHostelNotifications}
-                onLogout={handleLogout}
-              />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Legacy route - redirect to new route */}
-        <Route
-          path="/hostel/*"
-          element={<Navigate to="/hostel-admin" replace />}
-        />
-
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-
-      <ProfileUpdatedModal
-        isOpen={showProfileUpdatedModal}
-        onClose={() => setShowProfileUpdatedModal(false)}
-        isInitialSetup={userProfile && !userProfile.email}
-      />
-      <Toaster />
+        <Toaster />
       </>
     </UnibotProvider>
   );

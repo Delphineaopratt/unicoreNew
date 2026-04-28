@@ -33,6 +33,16 @@ export const getAllHostels = async () => {
   }
 };
 
+export const getMyHostels = async () => {
+  try {
+    const response = await api.get('/admin/my-hostels');
+    return response.data.data || response.data || [];
+  } catch (error: any) {
+    console.error('Error fetching admin hostels:', error);
+    throw error.response?.data || error;
+  }
+};
+
 export const getHostelById = async (id: string) => {
   try {
     const response = await api.get(`/${id}`);

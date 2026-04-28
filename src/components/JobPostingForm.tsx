@@ -101,7 +101,24 @@ export function JobPostingForm({ onJobAdded }: JobPostingFormProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create job");
+        let errorMessage = "Failed to create job";
+        try {
+          const errorBody = await response.json();
+          errorMessage =
+            errorBody?.message || errorBody?.error || errorMessage;
+        } catch {
+          try {
+            errorMessage = await response.text();
+          } catch {
+            // keep default message
+          }
+        }
+
+        throw new Error(
+          `${errorMessage} (HTTP ${response.status}${
+            response.statusText ? ` ${response.statusText}` : ""
+          })`,
+        );
       }
 
       const result = await response.json();

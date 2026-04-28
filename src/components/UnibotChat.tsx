@@ -109,7 +109,7 @@ export function UnibotChat({ userProfile }: UnibotChatProps) {
         content: response,
         timestamp: new Date(),
         suggestions: [], // Could be parsed from AI response if needed
-        actionButtons: [], // Could be parsed from AI response if needed
+        actionButtons: [], // Could also be parsed from AI response if needed
       };
     } catch (error: any) {
       console.error("Error generating bot response:", error);

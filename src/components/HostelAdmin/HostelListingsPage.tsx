@@ -14,7 +14,7 @@ import { Input } from "../ui/input";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Hostel } from "../../types";
-import { getAllHostels, deleteHostel } from "../../services/hostel.service";
+import { getMyHostels, deleteHostel } from "../../services/hostel.service";
 import { toast } from "sonner";
 
 function HostelListingsPage() {
@@ -24,6 +24,18 @@ function HostelListingsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredHostels, setFilteredHostels] = useState<Hostel[]>([]);
 
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return "";
+    if (
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("blob:")
+    ) {
+      return url;
+    }
+    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
   useEffect(() => {
     fetchHostels();
   }, []);
@@ -32,7 +44,7 @@ function HostelListingsPage() {
     const filtered = hostels.filter(
       (hostel) =>
         hostel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        hostel.location.toLowerCase().includes(searchQuery.toLowerCase())
+        hostel.location.toLowerCase().includes(searchQuery.toLowerCase()),
     );
     setFilteredHostels(filtered);
   }, [searchQuery, hostels]);
@@ -40,7 +52,7 @@ function HostelListingsPage() {
   const fetchHostels = async () => {
     try {
       setIsLoading(true);
-      const fetchedHostels = await getAllHostels();
+      const fetchedHostels = await getMyHostels();
       const hostelsWithIds = fetchedHostels.map((h: any, index: number) => ({
         ...h,
         _id: h._id || h.id || `temp-${index}`,
@@ -146,7 +158,7 @@ function HostelListingsPage() {
               <div className="relative h-48 bg-gradient-to-br from-blue-100 to-blue-200">
                 {hostel.photos && hostel.photos.length > 0 ? (
                   <img
-                    src={hostel.photos[0]}
+                    src={resolveImageUrl(hostel.photos[0])}
                     alt={hostel.name}
                     className="w-full h-full object-cover"
                   />
@@ -169,7 +181,9 @@ function HostelListingsPage() {
                 </h3>
                 <div className="flex items-center gap-2 text-gray-600 mb-3">
                   <MapPin className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm line-clamp-1">{hostel.location}</span>
+                  <span className="text-sm line-clamp-1">
+                    {hostel.location}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                   {hostel.description}

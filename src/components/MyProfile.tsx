@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -45,26 +45,37 @@ interface MyProfileProps {
 }
 
 export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
+  const normalizeProfile = (profile: UserProfile | null): UserProfile => ({
+    program: profile?.program || "",
+    cgpa: profile?.cgpa || "",
+    studentId: profile?.studentId || "",
+    jobTypes: profile?.jobTypes || [],
+    skills: profile?.skills || [],
+    interests: profile?.interests || [],
+    transcript: profile?.transcript || null,
+    name: profile?.name || "",
+    email: profile?.email || "",
+    phone: profile?.phone || "",
+    location: profile?.location || "",
+    bio: profile?.bio || "",
+    profilePicture: profile?.profilePicture || "",
+    school: {
+      name: profile?.school?.name || "",
+      address: profile?.school?.address || "",
+      email: profile?.school?.email || "",
+    },
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<UserProfile>(
-    userProfile || {
-      program: "",
-      cgpa: "",
-      studentId: "",
-      jobTypes: [],
-      skills: [],
-      interests: [],
-      transcript: null,
-      name: "",
-      email: "",
-      phone: "",
-      school: {
-        name: "",
-        address: "",
-        email: "",
-      },
-    },
+    normalizeProfile(userProfile),
   );
+  useEffect(() => {
+    if (!isEditing) {
+      setEditedProfile(normalizeProfile(userProfile));
+    }
+  }, [userProfile, isEditing]);
+
   const [profilePicturePreview, setProfilePicturePreview] = useState<
     string | null
   >(null);
@@ -81,7 +92,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
 
   const handleEditClick = () => {
     setIsEditing(true);
-    setEditedProfile({ ...userProfile! });
+    setEditedProfile(normalizeProfile(userProfile));
   };
 
   const handleSaveClick = async () => {
@@ -108,7 +119,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditedProfile({ ...userProfile! });
+    setEditedProfile(normalizeProfile(userProfile));
     setProfilePicturePreview(null);
   };
 
@@ -381,7 +392,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                     </label>
                     {isEditing ? (
                       <Input
-                        value={editedProfile.program}
+                        value={editedProfile.program || ""}
                         onChange={(e) =>
                           setEditedProfile((prev) => ({
                             ...prev,
@@ -401,7 +412,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                     </label>
                     {isEditing ? (
                       <Input
-                        value={editedProfile.studentId}
+                        value={editedProfile.studentId || ""}
                         onChange={(e) =>
                           setEditedProfile((prev) => ({
                             ...prev,
@@ -424,7 +435,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                         min="0"
                         max="4"
                         step="0.01"
-                        value={editedProfile.cgpa}
+                        value={editedProfile.cgpa || ""}
                         onChange={(e) =>
                           setEditedProfile((prev) => ({
                             ...prev,

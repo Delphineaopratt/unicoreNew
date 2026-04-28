@@ -42,7 +42,10 @@ export function ApplicationsPage() {
         }
       } catch (error) {
         console.error("Error fetching applications:", error);
-        toast.error("Failed to load applications");
+        toast.error(
+          (error as any)?.response?.data?.message ||
+            "Failed to load applications",
+        );
       } finally {
         setLoading(false);
       }
@@ -171,7 +174,10 @@ export function ApplicationsPage() {
                   }
                 } catch (error) {
                   console.error("Error fetching applications:", error);
-                  toast.error("Failed to refresh applications");
+                  toast.error(
+                    (error as any)?.response?.data?.message ||
+                      "Failed to refresh applications",
+                  );
                 } finally {
                   setLoading(false);
                 }

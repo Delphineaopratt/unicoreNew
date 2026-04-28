@@ -12,9 +12,7 @@ import { Button } from "./ui/button";
 // import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BookingConfirmationModal } from "./BookingConfirmationModal";
 import { getHostelById } from "../services/hostel.service";
-import { createBooking } from "../services/booking.service";
 import { Hostel, Room as RoomType } from "../types";
-import { toast } from "sonner";
 import MapDisplay from "./Map/MapDisplay";
 
 interface Room {
@@ -57,6 +55,18 @@ export function HostelDetails({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return "/placeholder-hostel.jpg";
+    if (
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("blob:")
+    ) {
+      return url;
+    }
+    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
   useEffect(() => {
     fetchHostels();
   }, [hostelId]);
@@ -64,7 +74,7 @@ export function HostelDetails({
   const handleBookRoom = (roomId: string) => {
     const availableRooms = hostel?.rooms || [];
     const room = availableRooms.find(
-      (r) => (r as any).id === roomId || (r as any)._id === roomId
+      (r) => (r as any).id === roomId || (r as any)._id === roomId,
     );
     if (room) {
       // Convert Room type if needed
@@ -100,55 +110,21 @@ export function HostelDetails({
 
   const getUserEmail = () => {
     try {
-      const userStr = localStorage.getItem('user');
+      const userStr = localStorage.getItem("user");
       if (userStr) {
         const user = JSON.parse(userStr);
-        return user.email || '';
+        return user.email || "";
       }
     } catch (err) {
-      console.error('Error getting user email:', err);
+      console.error("Error getting user email:", err);
     }
-    return '';
+    return "";
   };
 
-  const handleConfirmBooking = async () => {
-    if (!selectedRoom || !hostel) return;
-
-    try {
-      // Create booking via API
-      const bookingData: any = {
-        hostel: hostelId,
-        room: selectedRoom.id,
-        checkInDate: new Date().toISOString(),
-        checkOutDate: new Date(
-          Date.now() + 30 * 24 * 60 * 60 * 1000
-        ).toISOString(), // 30 days from now
-        status: "pending" as const,
-      };
-
-      await createBooking(bookingData);
-
-      // Create local booking object for UI update
-      const booking: Booking = {
-        id: Date.now().toString(),
-        hostelName: hostel.name,
-        roomName: selectedRoom.name,
-        roomType: selectedRoom.type,
-        price: selectedRoom.price,
-        bookingDate: new Date().toISOString(),
-        status: "confirmed",
-        image: selectedRoom.image,
-      };
-
-      onBooking(booking);
-      setIsModalOpen(false);
-      setSelectedRoom(null);
-      toast.success("Booking confirmed successfully!");
-    } catch (err) {
-      console.error("Error creating booking:", err);
-      toast.error("Failed to create booking. Please try again.");
-      throw err; // Re-throw to let modal handle it
-    }
+  const handleConfirmBooking = (booking: Booking) => {
+    onBooking(booking);
+    setIsModalOpen(false);
+    setSelectedRoom(null);
   };
 
   const displayRooms = hostel?.rooms || [];
@@ -218,8 +194,10 @@ export function HostelDetails({
               </div>
             )}
           </div>
-          <p className="text-gray-600 leading-relaxed mb-6">{hostel?.description}</p>
-          
+          <p className="text-gray-600 leading-relaxed mb-6">
+            {hostel?.description}
+          </p>
+
           {/* Map Display */}
           {hostel?.coordinates?.latitude && hostel?.coordinates?.longitude && (
             <div className="mt-6">
@@ -246,16 +224,26 @@ export function HostelDetails({
                   <div className="relative bg-gray-200 h-48">
                     {room.photos && room.photos.length > 0 ? (
                       <img
-                        src={`http://localhost:5001${room.photos[0]}`}
+                        src={resolveImageUrl(room.photos[0])}
                         alt={room.name}
                         className="w-full h-full object-cover"
                         onError={(e: any) => {
                           e.target.style.display = "none";
-                          e.target.nextElementSibling?.style.removeProperty("display");
+                          e.target.nextElementSibling?.style.removeProperty(
+                            "display",
+                          );
                         }}
                       />
                     ) : null}
-                    <div className="w-full h-full flex items-center justify-center bg-gray-200" style={{display: room.photos && room.photos.length > 0 ? "none" : "flex"}}>
+                    <div
+                      className="w-full h-full flex items-center justify-center bg-gray-200"
+                      style={{
+                        display:
+                          room.photos && room.photos.length > 0
+                            ? "none"
+                            : "flex",
+                      }}
+                    >
                       <BedDouble className="w-12 h-12 text-gray-400" />
                     </div>
                     {/* Slide indicators */}
@@ -284,8 +272,8 @@ export function HostelDetails({
                         {(Array.isArray(room.amenities)
                           ? room.amenities
                           : typeof room.amenities === "string"
-                          ? [room.amenities]
-                          : []
+                            ? [room.amenities]
+                            : []
                         ).map((amenity: any, idx: number) => (
                           <div key={idx} className="flex items-center">
                             <div className="w-1 h-1 bg-gray-400 rounded-full mr-2"></div>

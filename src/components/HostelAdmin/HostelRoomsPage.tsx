@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Hostel, Room } from "../../types";
 import {
-  getAllHostels,
+  getMyHostels,
   addRoom,
   updateRoom,
   deleteRoom,
@@ -46,6 +46,18 @@ function HostelRoomsPage() {
     photos: [] as HostelPhoto[],
   });
 
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return "";
+    if (
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("blob:")
+    ) {
+      return url;
+    }
+    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
   useEffect(() => {
     fetchHostel();
   }, [hostelId]);
@@ -53,7 +65,7 @@ function HostelRoomsPage() {
   const fetchHostel = async () => {
     try {
       setIsLoading(true);
-      const hostels = await getAllHostels();
+      const hostels = await getMyHostels();
       const foundHostel = hostels.find((h: any) => h._id === hostelId);
       if (foundHostel) {
         setHostel(foundHostel);
@@ -111,11 +123,11 @@ function HostelRoomsPage() {
       formData.append("type", roomForm.type);
       formData.append(
         "amenities",
-        JSON.stringify(roomForm.amenities.split(",").map((a) => a.trim()))
+        JSON.stringify(roomForm.amenities.split(",").map((a) => a.trim())),
       );
       formData.append("price", roomForm.price);
       formData.append("availableRooms", roomForm.availableRooms.toString());
-      
+
       roomForm.photos.forEach((photo) => {
         if (photo.file) {
           formData.append("photos", photo.file);
@@ -124,7 +136,7 @@ function HostelRoomsPage() {
 
       const updatedHostel = await addRoom(hostelId, formData);
       setHostel(updatedHostel);
-      
+
       // Reset form
       setRoomForm({
         name: "",
@@ -180,9 +192,13 @@ function HostelRoomsPage() {
         availableRooms: roomForm.availableRooms,
       };
 
-      const updatedHostel = await updateRoom(hostelId, editingRoom._id, roomData);
+      const updatedHostel = await updateRoom(
+        hostelId,
+        editingRoom._id,
+        roomData,
+      );
       setHostel(updatedHostel);
-      
+
       // Reset form
       setRoomForm({
         name: "",
@@ -218,7 +234,7 @@ function HostelRoomsPage() {
 
   const handleDeleteRoom = async (roomId: string) => {
     if (!hostelId) return;
-    
+
     if (!window.confirm("Are you sure you want to delete this room?")) {
       return;
     }
@@ -286,11 +302,7 @@ function HostelRoomsPage() {
               <Bed className="h-5 w-5 text-blue-600" />
               {editingRoom ? "Edit Room" : "Add New Room"}
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancelEdit}
-            >
+            <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
@@ -436,7 +448,13 @@ function HostelRoomsPage() {
                 disabled={isLoading}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
               >
-                {isLoading ? (editingRoom ? "Updating..." : "Adding...") : (editingRoom ? "Update Room" : "Add Room")}
+                {isLoading
+                  ? editingRoom
+                    ? "Updating..."
+                    : "Adding..."
+                  : editingRoom
+                    ? "Update Room"
+                    : "Add Room"}
               </Button>
             </div>
           </CardContent>
@@ -479,7 +497,7 @@ function HostelRoomsPage() {
                 <div className="relative h-40 bg-gradient-to-br from-purple-100 to-purple-200">
                   {room.photos && room.photos.length > 0 ? (
                     <img
-                      src={room.photos[0]}
+                      src={resolveImageUrl(room.photos[0])}
                       alt={room.name}
                       className="w-full h-full object-cover"
                     />

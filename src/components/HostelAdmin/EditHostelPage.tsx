@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { getAllHostels, updateHostel } from "../../services/hostel.service";
+import { getMyHostels, updateHostel } from "../../services/hostel.service";
 import { toast } from "sonner";
 import LocationPicker from "./LocationPicker";
 
@@ -29,7 +29,7 @@ function EditHostelPage() {
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
-  }>({ latitude: 5.6037, longitude: -0.1870 });
+  }>({ latitude: 5.6037, longitude: -0.187 });
 
   useEffect(() => {
     fetchHostel();
@@ -38,9 +38,9 @@ function EditHostelPage() {
   const fetchHostel = async () => {
     try {
       setIsLoading(true);
-      const hostels = await getAllHostels();
+      const hostels = await getMyHostels();
       const hostel = hostels.find((h: any) => h._id === hostelId);
-      
+
       if (hostel) {
         setHostelForm({
           name: hostel.name || "",
@@ -54,7 +54,7 @@ function EditHostelPage() {
               }))
             : [],
         });
-        
+
         // Set coordinates if available
         if (hostel.coordinates?.latitude && hostel.coordinates?.longitude) {
           setCoordinates({
@@ -106,7 +106,7 @@ function EditHostelPage() {
 
     try {
       setIsLoading(true);
-      
+
       const hostelData = {
         name: hostelForm.name,
         location: hostelForm.location,
@@ -150,12 +150,8 @@ function EditHostelPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Hostels
         </Button>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Edit Hostel
-        </h1>
-        <p className="text-gray-600">
-          Update your hostel information
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Hostel</h1>
+        <p className="text-gray-600">Update your hostel information</p>
       </div>
 
       {/* Form */}

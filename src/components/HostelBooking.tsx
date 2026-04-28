@@ -45,6 +45,18 @@ export function HostelBooking() {
     longitude: number;
   } | null>(null);
 
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return "/placeholder-hostel.jpg";
+    if (
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("blob:")
+    ) {
+      return url;
+    }
+    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
   useEffect(() => {
     fetchHostels();
     // if (isAuthenticated()) {
@@ -77,7 +89,9 @@ export function HostelBooking() {
       return;
     }
 
-    const university = UNIVERSITIES.find(uni => uni.id === selectedUniversity);
+    const university = UNIVERSITIES.find(
+      (uni) => uni.id === selectedUniversity,
+    );
     if (!university) {
       setFilteredHostels([]);
       return;
@@ -88,7 +102,7 @@ export function HostelBooking() {
       hostels,
       university.coordinates.latitude,
       university.coordinates.longitude,
-      MAX_DISTANCE_KM
+      MAX_DISTANCE_KM,
     );
 
     setFilteredHostels(nearby);
@@ -126,7 +140,7 @@ export function HostelBooking() {
         hostel: hostelId,
         checkInDate: new Date().toISOString(),
         checkOutDate: new Date(
-          Date.now() + 30 * 24 * 60 * 60 * 1000
+          Date.now() + 30 * 24 * 60 * 60 * 1000,
         ).toISOString(), // 30 days from now
       });
       toast.success("Booking created successfully!");
@@ -157,7 +171,7 @@ export function HostelBooking() {
         setUserLocation({ latitude, longitude });
         setLocationEnabled(true);
         toast.success(
-          `Location enabled: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+          `Location enabled: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
         );
         console.log("User location:", { latitude, longitude });
       },
@@ -182,7 +196,7 @@ export function HostelBooking() {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 0,
-      }
+      },
     );
   };
 
@@ -284,7 +298,7 @@ export function HostelBooking() {
         {!loading && !error && activeTab === "explore" && (
           <div>
             {!selectedUniversity ? (
-              // Force university selection
+              // University selection
               <div className="text-center py-12">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 max-w-md mx-auto">
                   <MapPin className="w-16 h-16 text-blue-500 mx-auto mb-4" />
@@ -292,7 +306,8 @@ export function HostelBooking() {
                     Select Your University
                   </h3>
                   <p className="text-blue-700 mb-4">
-                    Please select your university from the dropdown above to see hostels within {MAX_DISTANCE_KM}km radius.
+                    Please select your university from the dropdown above to see
+                    hostels within {MAX_DISTANCE_KM}km radius.
                   </p>
                 </div>
               </div>
@@ -305,7 +320,8 @@ export function HostelBooking() {
                     No Hostels Found Nearby
                   </h3>
                   <p className="text-yellow-700 mb-4">
-                    We couldn't find any hostels within {MAX_DISTANCE_KM}km of your selected university.
+                    We couldn't find any hostels within {MAX_DISTANCE_KM}km of
+                    your selected university.
                   </p>
                   <Button
                     onClick={() => setShowAllHostels(true)}
@@ -320,7 +336,9 @@ export function HostelBooking() {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">
-                    {showAllHostels ? `All Hostels (${hostelCount.total})` : `Hostels Near You (${hostelCount.nearby})`}
+                    {showAllHostels
+                      ? `All Hostels (${hostelCount.total})`
+                      : `Hostels Near You (${hostelCount.nearby})`}
                   </h2>
                   {showAllHostels && hostelCount.nearby > 0 && (
                     <Button
@@ -333,48 +351,55 @@ export function HostelBooking() {
                   )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {(showAllHostels ? hostels : filteredHostels).map((hostel: any) => (
-                    <div
-                      key={hostel._id}
-                      className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div className="relative">
-                        {/* <ImageWithFallback
-                          src={hostel.photos[0] || "/placeholder-hostel.jpg"}
-                          alt={hostel.name}
-                          className="w-full h-48 object-cover"
-                        /> */}
-                        {hostel.distance && (
-                          <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                            {hostel.distance}km away
+                  {(showAllHostels ? hostels : filteredHostels).map(
+                    (hostel: any) => (
+                      <div
+                        key={hostel._id}
+                        className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="relative">
+                          <img
+                            src={resolveImageUrl(hostel.photos?.[0])}
+                            alt={hostel.name}
+                            className="w-full h-48 object-cover"
+                          />
+                          {hostel.distance && (
+                            <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                              {hostel.distance}km away
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-4">
+                          <h3 className="font-semibold text-lg mb-2">
+                            {hostel.name}
+                          </h3>
+                          <div className="flex items-center text-gray-600 text-sm mb-2">
+                            <MapPin className="w-4 h-4 mr-1" />
+                            {hostel.location}
                           </div>
-                        )}
-                      </div>
+                          <div className="flex items-center text-gray-600 text-sm mb-4">
+                            <BedDouble className="w-4 h-4 mr-1" />
+                            {(Array.isArray(hostel.rooms)
+                              ? hostel.rooms.length
+                              : hostel.availableRooms) || 0}{" "}
+                            rooms uploaded
+                          </div>
 
-                      <div className="p-4">
-                        <h3 className="font-semibold text-lg mb-2">
-                          {hostel.name}
-                        </h3>
-                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {hostel.location}
+                          <Button
+                            className="w-full bg-blue-600 hover:bg-blue-700"
+                            onClick={() =>
+                              navigate(
+                                `/student/hostel-details?id=${hostel._id}`,
+                              )
+                            }
+                          >
+                            View Hostel
+                          </Button>
                         </div>
-                        <div className="flex items-center text-gray-600 text-sm mb-4">
-                          <BedDouble className="w-4 h-4 mr-1" />
-                          {hostel.availableRooms} rooms available
-                        </div>
-
-                        <Button
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                          onClick={() =>
-                            navigate(`/student/hostel-details?id=${hostel._id}`)
-                          }
-                        >
-                          View Hostel
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    ),
+                  )}
                 </div>
               </div>
             )}
@@ -414,14 +439,13 @@ export function HostelBooking() {
                     className="bg-white rounded-lg p-4 shadow-sm border"
                   >
                     <div className="flex gap-4">
-                      {/* <ImageWithFallback
-                        src={
-                          (booking.hostel as Hostel).photos[0] ||
-                          "/placeholder-hostel.jpg"
-                        }
+                      <img
+                        src={resolveImageUrl(
+                          (booking.hostel as Hostel).photos?.[0],
+                        )}
                         alt={(booking.hostel as Hostel).name}
                         className="w-20 h-20 object-cover rounded-lg"
-                      /> */}
+                      />
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
                           <div>
@@ -441,8 +465,8 @@ export function HostelBooking() {
                                 booking.status === "confirmed"
                                   ? "bg-green-100 text-green-800"
                                   : booking.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
                               }`}
                             >
                               {booking.status.charAt(0).toUpperCase() +
@@ -483,8 +507,8 @@ export function HostelBooking() {
                           notification.type === "success"
                             ? "bg-green-500"
                             : notification.type === "warning"
-                            ? "bg-yellow-500"
-                            : "bg-blue-500"
+                              ? "bg-yellow-500"
+                              : "bg-blue-500"
                         }`}
                       />
                       <div className="flex-1">

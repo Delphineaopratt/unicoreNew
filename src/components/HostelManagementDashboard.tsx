@@ -16,7 +16,7 @@ import { Badge } from "./ui/badge";
 // import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Hostel, Room, Notification as HostelNotification } from "../types";
 import {
-  getAllHostels,
+  getMyHostels,
   createHostel,
   updateHostel,
   deleteHostel,
@@ -114,7 +114,7 @@ export function HostelManagementDashboard({
   const fetchHostels = async () => {
     try {
       setIsLoading(true);
-      const fetchedHostels = await getAllHostels(); // returns an array directly
+      const fetchedHostels = await getMyHostels(); // returns an array directly
 
       // Normalize the data in case _id is missing
       const hostelsWithIds = fetchedHostels.map((h: any, index: number) => ({
@@ -133,7 +133,7 @@ export function HostelManagementDashboard({
   };
 
   const handleHostelPhotoUpload = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files;
     if (files) {
@@ -150,7 +150,7 @@ export function HostelManagementDashboard({
   };
 
   const handleRoomPhotoUpload = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const files = event.target.files;
     if (files) {
@@ -179,7 +179,6 @@ export function HostelManagementDashboard({
       formData.append("location", hostelForm.location);
       formData.append("description", hostelForm.description);
       formData.append("availableRooms", hostelForm.availableRooms.toString());
-      formData.append("adminId", "672c1e2f0e12a835b4f1d8f9"); // Temporary adminId for testing
       hostelForm.photos.forEach((photo, idx) => {
         if (photo.file) {
           formData.append("photos", photo.file);
@@ -222,7 +221,7 @@ export function HostelManagementDashboard({
       formData.append("type", roomForm.type);
       formData.append(
         "amenities",
-        JSON.stringify(roomForm.amenities.split(",").map((a) => a.trim()))
+        JSON.stringify(roomForm.amenities.split(",").map((a) => a.trim())),
       );
       formData.append("price", roomForm.price);
       formData.append("availableRooms", roomForm.availableRooms.toString());
@@ -234,7 +233,7 @@ export function HostelManagementDashboard({
       const updatedHostel = await addRoom(roomForm.hostelId, formData);
 
       setHostels(
-        hostels.map((h) => (h._id === updatedHostel._id ? updatedHostel : h))
+        hostels.map((h) => (h._id === updatedHostel._id ? updatedHostel : h)),
       );
 
       setRoomForm({
@@ -260,7 +259,7 @@ export function HostelManagementDashboard({
       setIsLoading(true);
       const updatedHostel = await deleteRoom(hostelId, roomId);
       setHostels(
-        hostels.map((h) => (h._id === updatedHostel._id ? updatedHostel : h))
+        hostels.map((h) => (h._id === updatedHostel._id ? updatedHostel : h)),
       );
       setError(null);
     } catch (err) {
@@ -558,7 +557,10 @@ export function HostelManagementDashboard({
               <h3 className="text-lg font-semibold mb-2">{hostel.name}</h3>
               <p className="text-gray-600 mb-2">{hostel.location}</p>
               <p className="text-gray-600 mb-4">
-                {hostel.availableRooms} rooms available
+                {(Array.isArray(hostel.rooms)
+                  ? hostel.rooms.length
+                  : hostel.availableRooms) || 0}{" "}
+                rooms uploaded
               </p>
               <div className="flex gap-2">
                 <Button

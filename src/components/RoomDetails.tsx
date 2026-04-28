@@ -14,6 +14,18 @@ export function RoomDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return "/placeholder-hostel.jpg";
+    if (
+      url.startsWith("http://") ||
+      url.startsWith("https://") ||
+      url.startsWith("blob:")
+    ) {
+      return url;
+    }
+    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
   useEffect(() => {
     if (hostelId) {
       fetchHostelDetails();
@@ -110,12 +122,12 @@ export function RoomDetails() {
                 {room.photos && room.photos.length > 0 ? (
                   <div className="relative h-56 bg-gray-200">
                     <img
-                      src={`http://localhost:5001${room.photos[0]}`}
+                      src={resolveImageUrl(room.photos[0])}
                       alt={room.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "https://images.unsplash.com/photo-1709805619372-40de3f158e83?w=400";
+                          "/placeholder-hostel.jpg";
                       }}
                     />
                     {room.photos.length > 1 && (
@@ -186,7 +198,7 @@ export function RoomDetails() {
                         {room.photos.map((photo, idx) => (
                           <img
                             key={idx}
-                            src={`http://localhost:5001${photo}`}
+                            src={resolveImageUrl(photo)}
                             alt={`${room.name} - ${idx + 1}`}
                             className="w-20 h-20 object-cover rounded border hover:opacity-75 cursor-pointer transition-opacity flex-shrink-0"
                             onError={(e) => {

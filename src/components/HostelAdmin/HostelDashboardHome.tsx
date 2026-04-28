@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Building2, Plus, TrendingUp, Users, Bed } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { getAllHostels } from "../../services/hostel.service";
+import { getMyHostels } from "../../services/hostel.service";
 
 function HostelDashboardHome() {
   const navigate = useNavigate();
@@ -22,8 +22,8 @@ function HostelDashboardHome() {
   const fetchStats = async () => {
     try {
       setIsLoading(true);
-      const hostels = await getAllHostels();
-      
+      const hostels = await getMyHostels();
+
       const totalRooms = hostels.reduce((sum: number, h: any) => {
         return sum + (h.rooms?.length || 0);
       }, 0);
@@ -155,13 +155,18 @@ function HostelDashboardHome() {
       {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-          <CardContent className="p-6" onClick={() => navigate("/hostel-admin/hostels")}>
+          <CardContent
+            className="p-6"
+            onClick={() => navigate("/hostel-admin/hostels")}
+          >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">View All Hostels</h3>
+                <h3 className="font-semibold text-gray-900">
+                  View All Hostels
+                </h3>
                 <p className="text-sm text-gray-600">
                   Manage your hostel listings and rooms
                 </p>
@@ -171,7 +176,10 @@ function HostelDashboardHome() {
         </Card>
 
         <Card className="border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer">
-          <CardContent className="p-6" onClick={() => navigate("/hostel-admin/create-hostel")}>
+          <CardContent
+            className="p-6"
+            onClick={() => navigate("/hostel-admin/create-hostel")}
+          >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                 <Plus className="w-6 h-6 text-green-600" />
