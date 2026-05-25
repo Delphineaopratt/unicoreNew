@@ -323,7 +323,12 @@ export function UnibotChat({ userProfile }: UnibotChatProps) {
                   }`}
                 >
                   <CardContent className="p-4">
-                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    <div className="whitespace-pre-wrap">
+                      {typeof message.content === "object"
+                        ? (message.content.text ??
+                          JSON.stringify(message.content))
+                        : message.content}
+                    </div>
 
                     {/* Action Buttons */}
                     {message.actionButtons &&

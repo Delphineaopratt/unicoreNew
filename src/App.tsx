@@ -81,6 +81,7 @@ interface JobNotification {
 interface UserProfile {
   program: string;
   cgpa: string;
+  studentId?: string;
   jobTypes: string[];
   skills: string[];
   interests: string[];
@@ -97,6 +98,11 @@ interface UserProfile {
   location?: string;
   bio?: string;
   profilePicture?: string;
+  school?: {
+    name: string;
+    address: string;
+    email: string;
+  };
 }
 
 interface HostelPhoto {
@@ -290,6 +296,7 @@ export default function App() {
             setUserProfile({
               program: userData.program || "",
               cgpa: userData.cgpa || "",
+              studentId: userData.studentId || "",
               jobTypes: userData.jobTypes || [],
               skills: userData.skills || [],
               interests: userData.interests || [],
@@ -300,6 +307,12 @@ export default function App() {
               location: userData.location,
               bio: userData.bio,
               profilePicture: userData.profilePicture,
+              school: {
+                name: userData.schoolName || userData.school?.name || "",
+                address:
+                  userData.schoolAddress || userData.school?.address || "",
+                email: userData.schoolEmail || userData.school?.email || "",
+              },
             });
 
             // If user hasn't completed onboarding, start it
@@ -626,6 +639,7 @@ export default function App() {
         setUserProfile({
           program: userData.program || "",
           cgpa: userData.cgpa || "",
+          studentId: userData.studentId || "",
           jobTypes: userData.jobTypes || [],
           skills: userData.skills || [],
           interests: userData.interests || [],
@@ -636,6 +650,11 @@ export default function App() {
           location: userData.location,
           bio: userData.bio,
           profilePicture: userData.profilePicture,
+          school: {
+            name: userData.schoolName || userData.school?.name || "",
+            address: userData.schoolAddress || userData.school?.address || "",
+            email: userData.schoolEmail || userData.school?.email || "",
+          },
         });
       }
 
@@ -666,9 +685,40 @@ export default function App() {
 
   const handleUpdateProfile = async (updatedProfile: UserProfile) => {
     try {
-      const { updateProfile } = await import("./services/user.service");
+      const { updateProfile, getCurrentUser } =
+        await import("./services/user.service");
       await updateProfile(updatedProfile);
-      setUserProfile(updatedProfile);
+
+      // Re-fetch authoritative data from backend so local state mirrors persisted values.
+      const refreshed = await getCurrentUser();
+      const userData = refreshed?.data;
+
+      if (userData) {
+        setUserProfile({
+          program: userData.program || "",
+          cgpa: userData.cgpa || "",
+          studentId: userData.studentId || "",
+          jobTypes: userData.jobTypes || [],
+          skills: userData.skills || [],
+          interests: userData.interests || [],
+          transcript: userData.transcript || null,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          location: userData.location,
+          bio: userData.bio,
+          profilePicture: userData.profilePicture,
+          school: {
+            name: userData.schoolName || userData.school?.name || "",
+            address: userData.schoolAddress || userData.school?.address || "",
+            email: userData.schoolEmail || userData.school?.email || "",
+          },
+        });
+      } else {
+        // Fallback if refresh response is empty
+        setUserProfile(updatedProfile);
+      }
+
       setShowProfileUpdatedModal(true);
 
       const notification: JobNotification = {
@@ -682,9 +732,7 @@ export default function App() {
       setJobNotifications((prev) => [...prev, notification]);
     } catch (error) {
       console.error("Error updating profile:", error);
-      // Still update locally even if API fails
-      setUserProfile(updatedProfile);
-      setShowProfileUpdatedModal(true);
+      throw error;
     }
   };
 

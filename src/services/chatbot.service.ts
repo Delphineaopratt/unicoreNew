@@ -101,26 +101,78 @@ const formatMessagesToPrompt = (messages: PuterMessage[]): string => {
 /**
  * Extract text from various Puter response formats
  */
+const stripMarkdown = (s: string): string => {
+  // remove markdown headings
+  let out = s.replace(/^#{1,6}\s+/gm, '');
+  // remove bold/italic markers
+  out = out.replace(/\*\*(.*?)\*\*/g, '$1');
+  out = out.replace(/__(.*?)__/g, '$1');
+  out = out.replace(/\*(.*?)\*/g, '$1');
+  out = out.replace(/_(.*?)_/g, '$1');
+  // remove inline code/backticks
+  out = out.replace(/`+/g, '');
+  // convert markdown links [text](url) -> text
+  out = out.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+  // replace multiple consecutive blank lines with two
+  out = out.replace(/\n{3,}/g, '\n\n');
+  return out.trim();
+};
+
 const extractTextFromResponse = (response: any): string => {
   // Try different response format options
-  if (response?.message?.content) {
-    return response.message.content;
-  }
+  // Common Puter shapes and fallbacks
+  try {
+    // If response is a string that contains JSON, parse it
+    if (typeof response === 'string') {
+      const trimmed = response.trim();
+      if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+        try {
+          const parsed = JSON.parse(response);
+          return extractTextFromResponse(parsed);
+        } catch (e) {
+          // not JSON, continue
+        }
+      }
+      // plain string -> clean markdown
+      return stripMarkdown(response.replace(/\\n/g, '\n'));
+    }
+
+    if (response?.message?.content !== undefined) {
+      const content = response.message.content;
+      if (typeof content === 'string') return stripMarkdown(content.replace(/\\n/g, '\n'));
+      if (typeof content === 'object' && content !== null) {
+        if (typeof content.text === 'string') return stripMarkdown(content.text.replace(/\\n/g, '\n'));
+        if (typeof content === 'object' && content.type === 'text' && typeof content.text === 'string') return stripMarkdown(content.text.replace(/\\n/g, '\n'));
+        if (Array.isArray(content)) return stripMarkdown(content.map((c) => (typeof c === 'string' ? c : typeof c.text === 'string' ? c.text : JSON.stringify(c))).join('\n'));
+        // best-effort: join object values
+        const joined = Object.values(content).map((v) => (typeof v === 'string' ? v : JSON.stringify(v))).join('\n');
+        return stripMarkdown(joined.replace(/\\n/g, '\n'));
+      }
+    }
   if (response?.text) {
     return response.text;
   }
-  if (response?.content) {
-    return response.content;
-  }
-  if (typeof response === 'string') {
-    return response;
-  }
-  if (response?.completion) {
-    return extractTextFromResponse(response.completion);
-  }
+    if (response?.content) {
+      if (typeof response.content === 'string') return stripMarkdown(response.content.replace(/\\n/g, '\n'));
+      if (typeof response.content === 'object' && response.content !== null && typeof response.content.text === 'string') return stripMarkdown(response.content.text.replace(/\\n/g, '\n'));
+    }
 
-  console.warn('⚠️ Unexpected response format:', response);
-  return '';
+    if (response?.completion) {
+      return extractTextFromResponse(response.completion);
+    }
+
+    console.warn('⚠️ Unexpected response format:', response);
+    // Fallback: try to stringify but unescape newlines and strip markdown
+    try {
+      const maybe = JSON.stringify(response);
+      return stripMarkdown(maybe.replace(/\\n/g, '\n'));
+    } catch (e) {
+      return '';
+    }
+  } catch (e) {
+    console.warn('Error extracting text from response', e);
+    return '';
+  }
 };
 
 // ==================== Chat Service ====================

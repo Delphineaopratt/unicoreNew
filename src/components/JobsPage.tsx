@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { toast } from "sonner";
 import { OnboardingFlow } from "./OnboardingFlow";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 interface JobApplication {
   id: string;
@@ -46,7 +46,7 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
   const [hasPreferences, setHasPreferences] = useState(false);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [jobNotifications, setJobNotifications] = useState<JobNotification[]>(
-    []
+    [],
   );
   const [loading, setLoading] = useState(true);
   const location = useLocation();
@@ -54,16 +54,16 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
   // Memoized calculations for tab badges
   const unreadNotificationsCount = useMemo(
     () => jobNotifications.filter((n) => !n.read).length,
-    [jobNotifications]
+    [jobNotifications],
   );
 
   const newApplicationsCount = useMemo(
     () =>
       applications.filter(
         (app) =>
-          new Date().getTime() - new Date(app.appliedDate).getTime() < 3600000
+          new Date().getTime() - new Date(app.appliedDate).getTime() < 3600000,
       ).length,
-    [applications]
+    [applications],
   );
 
   // Fetch jobs from API
@@ -101,10 +101,9 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
 
     const fetchRecommendedJobs = async () => {
       try {
-        const { getRecommendedJobs, getJobPreferences } = await import(
-          "../services/jobPreference.service"
-        );
-        
+        const { getRecommendedJobs, getJobPreferences } =
+          await import("../services/jobPreference.service");
+
         // Check if user has preferences
         const preferences = await getJobPreferences();
         if (preferences) {
@@ -148,9 +147,8 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
       }
 
       try {
-        const { getMyApplications, getNotifications } = await import(
-          "../services/job.service"
-        );
+        const { getMyApplications, getNotifications } =
+          await import("../services/job.service");
 
         // Fetch applications
         const applicationsResponse = await getMyApplications();
@@ -162,7 +160,7 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
               company: app.job.company,
               appliedDate: new Date(app.createdAt).toLocaleDateString(),
               status: app.status,
-            })
+            }),
           );
           setApplications(transformedApplications);
         }
@@ -178,7 +176,7 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
               date: new Date(notif.createdAt).toISOString(),
               type: notif.type,
               read: notif.read,
-            })
+            }),
           );
           setJobNotifications(transformedNotifications);
         }
@@ -216,12 +214,7 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
               study.
             </p>
           </div>
-          <Button
-            onClick={onStartOnboarding}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
-          >
-            Personalize Job Feed
-          </Button>
+          {/* Profile editing moved to My Profile page; header action removed */}
         </div>
       </div>
 
@@ -403,7 +396,7 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
                           <p className="text-sm text-gray-500">
                             Applied on{" "}
                             {new Date(
-                              application.appliedDate
+                              application.appliedDate,
                             ).toLocaleDateString()}
                           </p>
                         </div>
@@ -412,10 +405,10 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
                             application.status === "pending"
                               ? "bg-yellow-100 text-yellow-800"
                               : application.status === "reviewed"
-                              ? "bg-blue-100 text-blue-800"
-                              : application.status === "accepted"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                                ? "bg-blue-100 text-blue-800"
+                                : application.status === "accepted"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
                           }`}
                         >
                           {application.status.charAt(0).toUpperCase() +
@@ -452,8 +445,8 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
                           notification.type === "application"
                             ? "bg-blue-500"
                             : notification.type === "status_update"
-                            ? "bg-green-500"
-                            : "bg-purple-500"
+                              ? "bg-green-500"
+                              : "bg-purple-500"
                         }`}
                       />
                       {!notification.read && (

@@ -15,7 +15,6 @@ import {
 } from "./ui/dialog";
 import { Edit, Camera, Upload, Save, X, Mail, Check } from "lucide-react";
 import { toast } from "sonner";
-import { updateSchoolInfo } from "../services/school.service";
 // import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface UserProfile {
@@ -41,7 +40,7 @@ interface UserProfile {
 
 interface MyProfileProps {
   userProfile: UserProfile | null;
-  onUpdateProfile: (updatedProfile: UserProfile) => void;
+  onUpdateProfile: (updatedProfile: UserProfile) => Promise<void>;
 }
 
 export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
@@ -66,19 +65,28 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
     },
   });
 
-  const [isEditing, setIsEditing] = useState(false);
+  // If no userProfile is provided (first-time user), show the inputs by default
+  const [isEditing, setIsEditing] = useState<boolean>(() => !userProfile);
   const [editedProfile, setEditedProfile] = useState<UserProfile>(
     normalizeProfile(userProfile),
   );
+
   useEffect(() => {
-    if (!isEditing) {
+    if (userProfile) {
+      // When profile becomes available, populate fields and stop editing by default
       setEditedProfile(normalizeProfile(userProfile));
+      setIsEditing(false);
+    } else {
+      // No profile exists yet — initialize empty editable profile
+      setEditedProfile(normalizeProfile(null));
+      setIsEditing(true);
     }
-  }, [userProfile, isEditing]);
+  }, [userProfile]);
 
   const [profilePicturePreview, setProfilePicturePreview] = useState<
     string | null
   >(null);
+  const displayProfile = normalizeProfile(userProfile);
 
   const getTranscriptName = (
     transcript: File | { url?: string; filename?: string } | null,
@@ -97,23 +105,14 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
 
   const handleSaveClick = async () => {
     try {
-      // Save school information if provided
-      if (editedProfile.school && editedProfile.school.name) {
-        await updateSchoolInfo({
-          name: editedProfile.school.name,
-          address: editedProfile.school.address || "",
-          email: editedProfile.school.email || "",
-        });
-        toast.success("School information saved successfully");
-      }
-
       // Call the parent update handler for other profile fields
-      onUpdateProfile(editedProfile);
+      await onUpdateProfile(editedProfile);
       setIsEditing(false);
       setProfilePicturePreview(null);
+      toast.success("Profile updated successfully");
     } catch (error) {
-      console.error("Error saving school information:", error);
-      toast.error("Failed to save school information");
+      console.error("Error saving profile information:", error);
+      toast.error("Failed to save profile information");
     }
   };
 
@@ -213,21 +212,8 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
     "Music Production",
   ];
 
-  if (!userProfile) {
-    return (
-      <div className="flex-1 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-12">
-            <h1 className="text-2xl mb-4">Complete Your Profile</h1>
-            <p className="text-gray-600 mb-6">
-              Personalize your job feed under Jobs & Internships and complete
-              the onboarding process to set up your profile.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Render the full profile UI even if `userProfile` is null —
+  // `editedProfile` will contain default empty values and `isEditing` will be true.
 
   const getInitials = (name?: string) => {
     if (!name) return "UN";
@@ -359,16 +345,18 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                   ) : (
                     <>
                       <h3 className="font-semibold">
-                        {userProfile.name || "Student"}
+                        {displayProfile.name || "Student"}
                       </h3>
-                      {userProfile.email && (
-                        <p className="text-gray-600">{userProfile.email}</p>
+                      {displayProfile.email && (
+                        <p className="text-gray-600">{displayProfile.email}</p>
                       )}
-                      {userProfile.phone && (
-                        <p className="text-gray-600">{userProfile.phone}</p>
+                      {displayProfile.phone && (
+                        <p className="text-gray-600">{displayProfile.phone}</p>
                       )}
-                      {userProfile.location && (
-                        <p className="text-gray-600">{userProfile.location}</p>
+                      {displayProfile.location && (
+                        <p className="text-gray-600">
+                          {displayProfile.location}
+                        </p>
                       )}
                     </>
                   )}
@@ -402,7 +390,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                       />
                     ) : (
                       <p className="p-3 bg-gray-50 rounded-lg">
-                        {userProfile.program}
+                        {displayProfile.program}
                       </p>
                     )}
                   </div>
@@ -423,7 +411,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                       />
                     ) : (
                       <p className="p-3 bg-gray-50 rounded-lg">
-                        {userProfile.studentId || "Not provided"}
+                        {displayProfile.studentId || "Not provided"}
                       </p>
                     )}
                   </div>
@@ -445,7 +433,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                       />
                     ) : (
                       <p className="p-3 bg-gray-50 rounded-lg">
-                        {userProfile.cgpa}
+                        {displayProfile.cgpa}
                       </p>
                     )}
                   </div>
@@ -470,7 +458,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                         />
                       ) : (
                         <p className="p-3 bg-gray-50 rounded-lg">
-                          {userProfile.school?.name || "Not provided"}
+                          {displayProfile.school?.name || "Not provided"}
                         </p>
                       )}
                     </div>
@@ -490,7 +478,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                         />
                       ) : (
                         <p className="p-3 bg-gray-50 rounded-lg">
-                          {userProfile.school?.email || "Not provided"}
+                          {displayProfile.school?.email || "Not provided"}
                         </p>
                       )}
                     </div>
@@ -511,7 +499,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                       />
                     ) : (
                       <p className="p-3 bg-gray-50 rounded-lg">
-                        {userProfile.schoolAddress || "Not provided"}
+                        {displayProfile.school?.address || "Not provided"}
                       </p>
                     )}
                   </div>
@@ -523,7 +511,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                     <label className="block text-sm font-medium">
                       Academic Transcript
                     </label>
-                    {!isEditing && userProfile.transcript && (
+                    {!isEditing && displayProfile.transcript && (
                       <div className="text-sm text-green-600 flex items-center gap-2">
                         <Check size={16} />
                         Transcript uploaded
@@ -557,14 +545,14 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                     </div>
                   ) : (
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      {userProfile.transcript ? (
+                      {displayProfile.transcript ? (
                         <div className="space-y-2">
                           <p className="text-sm">
                             ✓ Transcript uploaded:{" "}
-                            {getTranscriptName(userProfile.transcript)}
+                            {getTranscriptName(displayProfile.transcript)}
                           </p>
-                          {!userProfile.school?.email ||
-                          !userProfile.studentId ? (
+                          {!displayProfile.school?.email ||
+                          !displayProfile.studentId ? (
                             <p className="text-xs text-amber-600">
                               💡 Complete your School Information and Student ID
                               to verify with your school
@@ -602,7 +590,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                   />
                 ) : (
                   <p className="text-gray-700">
-                    {userProfile.bio ||
+                    {displayProfile.bio ||
                       "Add a bio to tell others about yourself, your goals, and what you're passionate about."}
                   </p>
                 )}
@@ -635,7 +623,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                               {jobType}
                             </button>
                           ))
-                        : userProfile.jobTypes.map((jobType) => (
+                        : displayProfile.jobTypes.map((jobType) => (
                             <Badge key={jobType} variant="secondary">
                               {jobType}
                             </Badge>
@@ -672,7 +660,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                               {skill}
                             </button>
                           ))
-                        : userProfile.skills.map((skill) => (
+                        : displayProfile.skills.map((skill) => (
                             <Badge
                               key={skill}
                               className="bg-green-100 text-green-700"
@@ -702,7 +690,7 @@ export function MyProfile({ userProfile, onUpdateProfile }: MyProfileProps) {
                               {interest}
                             </button>
                           ))
-                        : userProfile.interests.map((interest) => (
+                        : displayProfile.interests.map((interest) => (
                             <Badge
                               key={interest}
                               className="bg-purple-100 text-purple-700"
