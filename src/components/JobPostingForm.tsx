@@ -85,7 +85,7 @@ export function JobPostingForm({ onJobAdded }: JobPostingFormProps) {
               .filter((skill) => skill)
           : [],
         applicationDeadline: new Date(
-          formData.applicationDeadline
+          formData.applicationDeadline,
         ).toISOString(),
         status: "active",
       };
@@ -104,8 +104,7 @@ export function JobPostingForm({ onJobAdded }: JobPostingFormProps) {
         let errorMessage = "Failed to create job";
         try {
           const errorBody = await response.json();
-          errorMessage =
-            errorBody?.message || errorBody?.error || errorMessage;
+          errorMessage = errorBody?.message || errorBody?.error || errorMessage;
         } catch {
           try {
             errorMessage = await response.text();
