@@ -1,23 +1,6 @@
-import axios from 'axios';
+import { api } from './api';
 
-const API_URL = 'http://localhost:5001/api/job-preferences';
-
-// Create axios instance with auth
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// The endpoints for job preferences are under /job-preferences
 
 // Save job preferences
 export const saveJobPreferences = async (preferences: {
@@ -29,7 +12,7 @@ export const saveJobPreferences = async (preferences: {
   transcript?: string;
 }) => {
   try {
-    const response = await api.post('/', preferences);
+    const response = await api.post('/job-preferences', preferences);
     return response.data;
   } catch (error: any) {
     console.error('Error saving job preferences:', error);
@@ -40,7 +23,7 @@ export const saveJobPreferences = async (preferences: {
 // Get job preferences
 export const getJobPreferences = async () => {
   try {
-    const response = await api.get('/');
+    const response = await api.get('/job-preferences');
     return response.data.data;
   } catch (error: any) {
     if (error.response?.status === 404) {
@@ -54,7 +37,7 @@ export const getJobPreferences = async () => {
 // Delete job preferences
 export const deleteJobPreferences = async () => {
   try {
-    const response = await api.delete('/');
+    const response = await api.delete('/job-preferences');
     return response.data;
   } catch (error: any) {
     console.error('Error deleting job preferences:', error);
@@ -65,7 +48,7 @@ export const deleteJobPreferences = async () => {
 // Get recommended jobs based on preferences
 export const getRecommendedJobs = async () => {
   try {
-    const response = await api.get('/recommended-jobs');
+    const response = await api.get('/job-preferences/recommended-jobs');
     return response.data.data;
   } catch (error: any) {
     if (error.response?.status === 404) {

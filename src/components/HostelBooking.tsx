@@ -22,6 +22,7 @@ import { getMyBookings, createBooking } from "../services/booking.service";
 import { toast } from "sonner";
 import { UNIVERSITIES, MAX_DISTANCE_KM } from "../constants/universities";
 import { filterHostelsByDistance } from "../utils/distance";
+import { API_BASE } from "../services/api";
 // import { isAuthenticated } from "../services/auth.service";
 
 export function HostelBooking() {
@@ -54,7 +55,8 @@ export function HostelBooking() {
     ) {
       return url;
     }
-    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+    const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+    return `${BACKEND_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
   useEffect(() => {

@@ -1,14 +1,5 @@
-import axios from 'axios';
 import PaystackPop from '@paystack/inline-js';
-
-const API_URL = 'http://localhost:5001/api/payments';
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import { api } from './api';
 
 const normalizeApiError = (error: any, fallback: string) => {
   const apiMessage =
@@ -77,7 +68,7 @@ export interface PaymentHistoryItem {
 
 export const initializePayment = async (bookingId: string): Promise<PaymentInitResponse> => {
   try {
-    const response = await api.post('/initialize', { bookingId });
+    const response = await api.post('/payments/initialize', { bookingId });
     return response.data;
   } catch (error: any) {
     throw normalizeApiError(error, 'Failed to initialize payment');
@@ -86,7 +77,7 @@ export const initializePayment = async (bookingId: string): Promise<PaymentInitR
 
 export const verifyPayment = async (reference: string): Promise<PaymentVerifyResponse> => {
   try {
-    const response = await api.get(`/verify/${reference}`);
+    const response = await api.get(`/payments/verify/${reference}`);
     return response.data;
   } catch (error: any) {
     throw normalizeApiError(error, 'Payment verification failed');
@@ -95,7 +86,7 @@ export const verifyPayment = async (reference: string): Promise<PaymentVerifyRes
 
 export const getPaymentHistory = async () => {
   try {
-    const response = await api.get('/history');
+    const response = await api.get('/payments/history');
     return response.data;
   } catch (error: any) {
     throw normalizeApiError(error, 'Failed to fetch payment history');
@@ -104,7 +95,7 @@ export const getPaymentHistory = async () => {
 
 export const refundPayment = async (bookingId: string, reason?: string) => {
   try {
-    const response = await api.post('/refund', { bookingId, reason });
+    const response = await api.post('/payments/refund', { bookingId, reason });
     return response.data;
   } catch (error: any) {
     throw normalizeApiError(error, 'Failed to process refund');
@@ -119,7 +110,7 @@ export const getPaystackPublicKey = async (): Promise<string> => {
   }
 
   try {
-    const response = await api.get('/public-key');
+    const response = await api.get('/payments/public-key');
     const key = response.data?.data?.publicKey || '';
     cachedPaystackPublicKey = key;
     return key;

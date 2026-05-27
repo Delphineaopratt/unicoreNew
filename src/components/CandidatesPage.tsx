@@ -13,6 +13,7 @@ import {
 } from "./ui/dialog";
 import { getShortlistedCandidates } from "../services/job.service";
 import { JobApplication } from "../types";
+import { API_BASE } from "../services/api";
 
 interface Candidate extends JobApplication {
   student: {
@@ -50,7 +51,8 @@ export function CandidatesPage() {
     // Schema stores resume/transcript as { url, filename }
     if (typeof fileData === "object" && fileData.url) {
       if (fileData.url.startsWith("/")) {
-        return `http://localhost:5001${fileData.url}`;
+        const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+        return `${BACKEND_BASE}${fileData.url}`;
       }
       return fileData.url;
     }
@@ -58,7 +60,8 @@ export function CandidatesPage() {
     // Legacy fallback where file value may be a plain string URL/path
     if (typeof fileData === "string") {
       if (fileData.startsWith("/")) {
-        return `http://localhost:5001${fileData}`;
+        const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+        return `${BACKEND_BASE}${fileData}`;
       }
       return fileData;
     }

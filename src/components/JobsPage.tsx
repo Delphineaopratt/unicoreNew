@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { toast } from "sonner";
 import { OnboardingFlow } from "./OnboardingFlow";
 import { useLocation } from "react-router-dom";
+import { API_BASE } from "../services/api";
 
 interface JobApplication {
   id: string;
@@ -70,7 +71,7 @@ export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch("http://localhost:5001/api/jobs");
+        const response = await fetch(`${API_BASE}/jobs`);
         if (response.ok) {
           const result = await response.json();
           if (result.success) {

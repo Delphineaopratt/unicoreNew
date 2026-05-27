@@ -1,29 +1,5 @@
-import axios from 'axios';
+import { api } from './api';
 import { Job, JobApplication } from '../types';
-
-const API_URL = 'http://localhost:5001/api';
-
-// Create axios instance with token interceptor
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  
-  // Don't set Content-Type for FormData requests
-  if (config.data instanceof FormData) {
-    delete config.headers['Content-Type'];
-  }
-  
-  return config;
-});
 
 // Job-related services
 export const getAllJobs = async () => {

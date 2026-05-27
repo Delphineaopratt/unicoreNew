@@ -1,31 +1,11 @@
 
-import axios from 'axios';
+import { api } from './api';
 import { Hostel, Room } from '../types';
-
-
-const API_URL = 'http://localhost:5001/api/hostels';
-
-// ✅ Create axios instance
-const api = axios.create({
-  baseURL: 'http://localhost:5001/api/hostels',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add token to requests if it exists
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 // ✅ Hostel services
 export const getAllHostels = async () => {
   try {
-    const response = await api.get('');
+    const response = await api.get('/hostels');
     return response.data.data || response.data; // supports both array or {data: []}
   } catch (error: any) {
     console.error('Error fetching hostels:', error);
@@ -35,7 +15,7 @@ export const getAllHostels = async () => {
 
 export const getMyHostels = async () => {
   try {
-    const response = await api.get('/admin/my-hostels');
+    const response = await api.get('/hostels/admin/my-hostels');
     return response.data.data || response.data || [];
   } catch (error: any) {
     console.error('Error fetching admin hostels:', error);
@@ -45,7 +25,7 @@ export const getMyHostels = async () => {
 
 export const getHostelById = async (id: string) => {
   try {
-    const response = await api.get(`/${id}`);
+    const response = await api.get(`/hostels/${id}`);
     return response.data.data || response.data;
   } catch (error: any) {
     console.error('Error fetching hostel by ID:', error);
@@ -57,18 +37,9 @@ export const getHostelById = async (id: string) => {
 
 export const createHostel = async (formData: FormData) => {
   try {
-    const token = localStorage.getItem('token');
-    
-    const response = await axios.post(
-      "http://localhost:5001/api/hostels",
-      formData,
-      {
-        headers: { 
-          "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${token}`
-        },
-      }
-    );
+    const response = await api.post('/hostels', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
     return response.data;
   } catch (error: any) {
@@ -80,7 +51,7 @@ export const createHostel = async (formData: FormData) => {
 
 export const updateHostel = async (id: string, hostelData: Partial<Hostel>) => {
   try {
-    const response = await api.put(`/${id}`, hostelData);
+    const response = await api.put(`/hostels/${id}`, hostelData);
     return response.data.data || response.data;
   } catch (error: any) {
     console.error('Error updating hostel:', error);
@@ -90,7 +61,7 @@ export const updateHostel = async (id: string, hostelData: Partial<Hostel>) => {
 
 export const deleteHostel = async (id: string) => {
   try {
-    const response = await api.delete(`/${id}`);
+    const response = await api.delete(`/hostels/${id}`);
     return response.data.data || response.data;
   } catch (error: any) {
     console.error('Error deleting hostel:', error);
@@ -101,7 +72,7 @@ export const deleteHostel = async (id: string) => {
 // ✅ Room services
 export const addRoom = async (hostelId: string, roomData: FormData) => {
   try {
-    const response = await api.post(`/${hostelId}/rooms`, roomData, {
+    const response = await api.post(`/hostels/${hostelId}/rooms`, roomData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data.data || response.data;
@@ -117,7 +88,7 @@ export const updateRoom = async (
   roomData: Partial<Room>
 ) => {
   try {
-    const response = await api.put(`/${hostelId}/rooms/${roomId}`, roomData);
+    const response = await api.put(`/hostels/${hostelId}/rooms/${roomId}`, roomData);
     return response.data.data || response.data;
   } catch (error: any) {
     console.error('Error updating room:', error);
@@ -127,7 +98,7 @@ export const updateRoom = async (
 
 export const deleteRoom = async (hostelId: string, roomId: string) => {
   try {
-    const response = await api.delete(`/${hostelId}/rooms/${roomId}`);
+    const response = await api.delete(`/hostels/${hostelId}/rooms/${roomId}`);
     return response.data.data || response.data;
   } catch (error: any) {
     console.error('Error deleting room:', error);
@@ -140,7 +111,7 @@ export const uploadImage = async (file: File) => {
   try {
     const formData = new FormData();
     formData.append('image', file);
-    const response = await api.post('/upload', formData, {
+    const response = await api.post('/hostels/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data.data || response.data;

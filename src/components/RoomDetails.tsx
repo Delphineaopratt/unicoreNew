@@ -4,6 +4,7 @@ import { ArrowLeft, Building2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Hostel } from "../types";
 import { getHostelById } from "../services/hostel.service";
+import { API_BASE } from "../services/api";
 
 export function RoomDetails() {
   const navigate = useNavigate();
@@ -23,7 +24,8 @@ export function RoomDetails() {
     ) {
       return url;
     }
-    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+    const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+    return `${BACKEND_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
   useEffect(() => {

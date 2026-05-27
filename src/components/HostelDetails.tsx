@@ -14,6 +14,7 @@ import { BookingConfirmationModal } from "./BookingConfirmationModal";
 import { getHostelById } from "../services/hostel.service";
 import { Hostel, Room as RoomType } from "../types";
 import MapDisplay from "./Map/MapDisplay";
+import { API_BASE } from "../services/api";
 
 interface Room {
   id: string;
@@ -64,7 +65,8 @@ export function HostelDetails({
     ) {
       return url;
     }
-    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+    const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+    return `${BACKEND_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
   useEffect(() => {

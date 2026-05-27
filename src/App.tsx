@@ -22,6 +22,7 @@ import { LoginForm } from "./components/LoginForm";
 import { SignupForm } from "./components/SignupForm";
 import { Toaster } from "./components/ui/sonner";
 import { UnibotProvider } from "./context/UnibotContext";
+import { API_BASE } from "./services/api";
 
 interface Job {
   id: string;
@@ -334,14 +335,11 @@ export default function App() {
     const fetchEmployerJobs = async () => {
       if (isAuthenticated && userType === "employer") {
         try {
-          const response = await fetch(
-            "http://localhost:5001/api/jobs/my-jobs",
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
+          const response = await fetch(`${API_BASE}/jobs/my-jobs`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          );
+          });
 
           if (response.ok) {
             const result = await response.json();
@@ -421,7 +419,7 @@ export default function App() {
 
   const handleDeleteJob = async (jobId: string) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/jobs/${jobId}`, {
+      const response = await fetch(`${API_BASE}/jobs/${jobId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
