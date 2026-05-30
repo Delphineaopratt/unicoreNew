@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { toast } from "sonner";
+import { API_BASE } from "../services/api";
 
 interface JobPostingFormProps {
   onJobAdded?: (job: any) => void;
@@ -91,7 +92,7 @@ export function JobPostingForm({ onJobAdded }: JobPostingFormProps) {
       };
 
       // Make API call to create job
-      const response = await fetch("http://localhost:5001/api/jobs", {
+      const response = await fetch(`${API_BASE}/jobs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -23,6 +23,7 @@ import {
   deleteRoom,
 } from "../../services/hostel.service";
 import { toast } from "sonner";
+import { API_BASE } from "../../services/api";
 
 interface HostelPhoto {
   id: string;
@@ -54,7 +55,8 @@ function HostelRoomsPage() {
     ) {
       return url;
     }
-    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+    const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+    return `${BACKEND_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
   useEffect(() => {

@@ -16,6 +16,7 @@ import { Badge } from "../ui/badge";
 import { Hostel } from "../../types";
 import { getMyHostels, deleteHostel } from "../../services/hostel.service";
 import { toast } from "sonner";
+import { API_BASE } from "../../services/api";
 
 function HostelListingsPage() {
   const navigate = useNavigate();
@@ -33,7 +34,8 @@ function HostelListingsPage() {
     ) {
       return url;
     }
-    return `http://localhost:5001${url.startsWith("/") ? "" : "/"}${url}`;
+    const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+    return `${BACKEND_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
   useEffect(() => {

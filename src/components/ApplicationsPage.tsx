@@ -18,6 +18,7 @@ import {
   verifyTranscript,
 } from "../services/job.service";
 import { JobApplication } from "../types";
+import { API_BASE } from "../services/api";
 import {
   Dialog,
   DialogContent,
@@ -132,7 +133,8 @@ export function ApplicationsPage() {
       const url = fileData.url;
       // If URL is relative, prepend the backend base URL
       if (url.startsWith("/")) {
-        return `http://localhost:5001${url}`;
+        const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+        return `${BACKEND_BASE}${url}`;
       }
       return url;
     }
@@ -140,7 +142,8 @@ export function ApplicationsPage() {
     // If it's a string (legacy format)
     if (typeof fileData === "string") {
       if (fileData.startsWith("/")) {
-        return `http://localhost:5001${fileData}`;
+        const BACKEND_BASE = API_BASE.replace(/\/api\/?$/, "");
+        return `${BACKEND_BASE}${fileData}`;
       }
       return fileData;
     }
