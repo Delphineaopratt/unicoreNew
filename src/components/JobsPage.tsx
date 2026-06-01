@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { toast } from "sonner";
-import { OnboardingFlow } from "./OnboardingFlow";
 import { useLocation } from "react-router-dom";
 import { API_BASE } from "../services/api";
 
@@ -36,11 +35,10 @@ interface Job {
 }
 
 interface JobsPageProps {
-  onStartOnboarding?: () => void;
   onApplyToJob: (job: Job) => void;
 }
 
-export function JobsPage({ onStartOnboarding, onApplyToJob }: JobsPageProps) {
+export function JobsPage({ onApplyToJob }: JobsPageProps) {
   const [activeTab, setActiveTab] = useState("featured");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);

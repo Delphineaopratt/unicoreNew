@@ -12,7 +12,6 @@ import { RoomDetails } from "./components/RoomDetails";
 import { HostelBooking } from "./components/HostelBooking";
 import { HostelDetails } from "./components/HostelDetails";
 import { JobsPage } from "./components/JobsPage";
-import { OnboardingFlow } from "./components/OnboardingFlow";
 import { MyProfile } from "./components/MyProfile";
 import { ProfileUpdatedModal } from "./components/ProfileUpdatedModal";
 import { JobApplicationForm } from "./components/JobApplicationForm";
@@ -219,7 +218,6 @@ export default function App() {
   const [jobNotifications, setJobNotifications] = useState<JobNotification[]>(
     [],
   );
-  const [isOnboardingActive, setIsOnboardingActive] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showProfileUpdatedModal, setShowProfileUpdatedModal] = useState(false);
   const [selectedJobForApplication, setSelectedJobForApplication] =
@@ -316,10 +314,6 @@ export default function App() {
               },
             });
 
-            // If user hasn't completed onboarding, start it
-            if (!userData.profileCompleted && userType === "student") {
-              setIsOnboardingActive(true);
-            }
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
@@ -606,81 +600,6 @@ export default function App() {
     navigate("/student/job-application");
   };
 
-  const handleStartOnboarding = () => {
-    setIsOnboardingActive(true);
-  };
-
-  const handleOnboardingComplete = async (data: UserProfile) => {
-    try {
-      console.log("Onboarding completed:", data);
-
-      // Save to user profile
-      const { completeOnboarding } = await import("./services/user.service");
-      await completeOnboarding(data);
-
-      // Save to job preferences
-      const { saveJobPreferences } =
-        await import("./services/jobPreference.service");
-      await saveJobPreferences({
-        program: data.program,
-        cgpa: data.cgpa,
-        jobTypes: data.jobTypes,
-        skills: data.skills,
-        interests: data.interests,
-      });
-
-      // Re-fetch user profile to get updated data from server
-      const { getCurrentUser } = await import("./services/user.service");
-      const response = await getCurrentUser();
-      if (response && response.data) {
-        const userData = response.data;
-        setUserProfile({
-          program: userData.program || "",
-          cgpa: userData.cgpa || "",
-          studentId: userData.studentId || "",
-          jobTypes: userData.jobTypes || [],
-          skills: userData.skills || [],
-          interests: userData.interests || [],
-          transcript: userData.transcript || null,
-          name: userData.name,
-          email: userData.email,
-          phone: userData.phone,
-          location: userData.location,
-          bio: userData.bio,
-          profilePicture: userData.profilePicture,
-          school: {
-            name: userData.schoolName || userData.school?.name || "",
-            address: userData.schoolAddress || userData.school?.address || "",
-            email: userData.schoolEmail || userData.school?.email || "",
-          },
-        });
-      }
-
-      setIsOnboardingActive(false);
-      setShowProfileUpdatedModal(true);
-
-      const notification: JobNotification = {
-        id: Date.now().toString(),
-        title: "Profile Personalized",
-        message: `Great! Your job feed has been personalized.`,
-        date: new Date().toISOString(),
-        type: "recommendation",
-        read: false,
-      };
-      setJobNotifications((prev) => [...prev, notification]);
-    } catch (error) {
-      console.error("Error completing onboarding:", error);
-      // Still set the profile locally even if API fails
-      setUserProfile(data);
-      setIsOnboardingActive(false);
-      setShowProfileUpdatedModal(true);
-    }
-  };
-
-  const handleOnboardingCancel = () => {
-    setIsOnboardingActive(false);
-  };
-
   const handleUpdateProfile = async (updatedProfile: UserProfile) => {
     try {
       const { updateProfile, getCurrentUser } =
@@ -733,19 +652,6 @@ export default function App() {
       throw error;
     }
   };
-
-  // Onboarding overlay
-  if (isOnboardingActive && isAuthenticated) {
-    return (
-      <>
-        <OnboardingFlow
-          onComplete={handleOnboardingComplete}
-          onCancel={handleOnboardingCancel}
-        />
-        <Toaster />
-      </>
-    );
-  }
 
   return (
     <UnibotProvider>
@@ -835,7 +741,6 @@ export default function App() {
                           jobApplications={jobApplications}
                           jobNotifications={jobNotifications}
                           setJobNotifications={setJobNotifications}
-                          onStartOnboarding={handleStartOnboarding}
                         />
                       }
                     />
@@ -854,7 +759,6 @@ export default function App() {
                       element={
                         <JobsPage
                           onApplyToJob={handleApplyToJob}
-                          onStartOnboarding={handleStartOnboarding}
                         />
                       }
                     />

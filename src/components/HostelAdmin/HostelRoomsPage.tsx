@@ -43,7 +43,6 @@ function HostelRoomsPage() {
     type: "",
     amenities: "",
     price: "",
-    availableRooms: 0,
     photos: [] as HostelPhoto[],
   });
 
@@ -128,7 +127,6 @@ function HostelRoomsPage() {
         JSON.stringify(roomForm.amenities.split(",").map((a) => a.trim())),
       );
       formData.append("price", roomForm.price);
-      formData.append("availableRooms", roomForm.availableRooms.toString());
 
       roomForm.photos.forEach((photo) => {
         if (photo.file) {
@@ -145,7 +143,6 @@ function HostelRoomsPage() {
         type: "",
         amenities: "",
         price: "",
-        availableRooms: 0,
         photos: [],
       });
       setShowAddRoom(false);
@@ -165,7 +162,6 @@ function HostelRoomsPage() {
       type: room.type,
       amenities: Array.isArray(room.amenities) ? room.amenities.join(", ") : "",
       price: room.price.toString(),
-      availableRooms: room.availableRooms || 0,
       photos: [],
     });
     setShowAddRoom(true);
@@ -191,7 +187,6 @@ function HostelRoomsPage() {
         type: roomForm.type,
         amenities: roomForm.amenities.split(",").map((a) => a.trim()),
         price: parseFloat(roomForm.price),
-        availableRooms: roomForm.availableRooms,
       };
 
       const updatedHostel = await updateRoom(
@@ -229,7 +224,6 @@ function HostelRoomsPage() {
       type: "",
       amenities: "",
       price: "",
-      availableRooms: 0,
       photos: [],
     });
   };
@@ -358,7 +352,7 @@ function HostelRoomsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Price per Month <span className="text-red-500">*</span>
+                  Price per Semester <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="number"
@@ -370,23 +364,7 @@ function HostelRoomsPage() {
                   placeholder="Enter price"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Available Rooms
-                </label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={roomForm.availableRooms}
-                  onChange={(e) =>
-                    setRoomForm((prev) => ({
-                      ...prev,
-                      availableRooms: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  placeholder="Number of rooms"
-                />
-              </div>
+              {/* availableRooms input removed */}
             </div>
 
             {/* Photos */}
@@ -527,7 +505,7 @@ function HostelRoomsPage() {
                         Price
                       </span>
                       <span className="font-semibold text-gray-900">
-                        ${room.price}/month
+                        GHS {room.price}/semester
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
